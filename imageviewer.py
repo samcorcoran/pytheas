@@ -1,10 +1,10 @@
 import pyglet
 import pyglet.gl
 
-width = 1000
-height = 1000
+window_width = 960
+window_height = 640
 
-window = pyglet.window.Window(960, 640)
+window = pyglet.window.Window(window_width, window_height)
 image = pyglet.resource.image('resources/pomeranian.jpg')
 
 def centre_image(image):
