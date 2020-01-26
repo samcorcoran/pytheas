@@ -1,5 +1,10 @@
 from pyglet.gl import *
 import math
+from everett.worldgraph import world
+from everett.worldgenerators import world_three
+
+world = world_three.generate_world(total_cells_desired=5000)
+
 window = pyglet.window.Window()
 
 planet_centre_coord = [window.width/2, window.height/2]
@@ -15,7 +20,7 @@ for p in range(circle_sides):
 vertex_list.vertices[-2:] = [planet_centre_coord[0] + (planet_drawn_radius * math.sin(2*math.pi)),
                              planet_centre_coord[1] + (planet_drawn_radius * math.cos(2*math.pi))]
 
-vertex_list.colors[:] = [0, 0, 255]*int(len(vertex_list.vertices)/2)
+vertex_list.colors[:] = [0, 0, 255]* (len(vertex_list.vertices)//2)
 
 @window.event
 def on_draw():
