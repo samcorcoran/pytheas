@@ -24,7 +24,7 @@ for p in range(circle_sides):
 blue_planet_vertex_list.vertices[-2:] = [planet_centre_coord[0] + (planet_drawn_radius * math.sin(2*math.pi)),
                                          planet_centre_coord[1] + (planet_drawn_radius * math.cos(2*math.pi))]
 
-blue_planet_vertex_list.colors[:] = [0, 0, 255]* (len(blue_planet_vertex_list.vertices)//2)
+blue_planet_vertex_list.colors[:] = [25, 100, 200]* (len(blue_planet_vertex_list.vertices)//2)
 
 # Construct worldgraph verts
 all_land_verts = list()
