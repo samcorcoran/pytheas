@@ -21,6 +21,11 @@ class Window(pyglet.window.Window):
         everett_importer.construct_blue_circle(self.blue_planet_vertex_list)
         everett_importer.construct_worldgraph_verts(self.worldgraph_vertex_list)
 
+    def draw_water_sphere(self):
+        glColor3f(0.015,0.02,0.07)
+        sphere = gluNewQuadric()
+        gluSphere(sphere, 10.0, 100, 100)
+
     def on_draw(self):
         # Clear the current GL Window
         self.clear()
@@ -29,6 +34,9 @@ class Window(pyglet.window.Window):
 
         glRotatef(self.xRotation, 1, 0, 0)
         glRotatef(self.yRotation, 0, 1, 0)
+
+        # TODO: Don't define new sphere on every draw?
+        self.draw_water_sphere()
 
         #self.blue_planet_vertex_list.draw(pyglet.gl.GL_TRIANGLE_FAN)
         self.worldgraph_vertex_list.draw(pyglet.gl.GL_POINTS)
