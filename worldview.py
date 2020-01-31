@@ -11,15 +11,15 @@ class Window(pyglet.window.Window):
 
     # Cube 3D start rotation
     xRotation = yRotation = 50
-    blue_planet_vertex_list = pyglet.graphics.vertex_list(50, 'v2f', 'c3B')
     worldgraph_vertex_list = pyglet.graphics.vertex_list(1, 'v3f', 'c3B')
+    cell_vertex_list = pyglet.graphics.vertex_list(1, 'v3f', 'c3B')
 
     def __init__(self, width, height, title=''):
         super(Window, self).__init__(width, height, title)
         glClearColor(0, 0, 0, 1)
         glEnable(GL_DEPTH_TEST)
-        everett_importer.construct_blue_circle(self.blue_planet_vertex_list)
-        everett_importer.construct_worldgraph_verts(self.worldgraph_vertex_list)
+        #everett_importer.construct_worldgraph_verts(self.worldgraph_vertex_list)
+        everett_importer.construct_cell_vertex_list(self.cell_vertex_list)
 
     def draw_water_sphere(self):
         glColor3f(0.015,0.02,0.07)
@@ -36,10 +36,10 @@ class Window(pyglet.window.Window):
         glRotatef(self.yRotation, 0, 1, 0)
 
         # TODO: Don't define new sphere on every draw?
-        self.draw_water_sphere()
+        #self.draw_water_sphere()
 
-        #self.blue_planet_vertex_list.draw(pyglet.gl.GL_TRIANGLE_FAN)
-        self.worldgraph_vertex_list.draw(pyglet.gl.GL_POINTS)
+        #self.worldgraph_vertex_list.draw(pyglet.gl.GL_POINTS)
+        self.cell_vertex_list.draw(pyglet.gl.GL_TRIANGLES)
 
         glPopMatrix()
 
@@ -59,7 +59,7 @@ class Window(pyglet.window.Window):
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         # Camera translation
-        glTranslatef(0, 0, -25)
+        glTranslatef(0, 0, -2)
 
 
     def on_text_motion(self, motion):
