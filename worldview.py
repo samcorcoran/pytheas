@@ -3,7 +3,7 @@ from pyglet.gl import *
 from pyglet.window import key
 import everett_importer
 
-window_height = 768
+window_height = 780
 window_width = 1080
 rotation_increment = 2
 
@@ -13,13 +13,14 @@ class Window(pyglet.window.Window):
     xRotation = yRotation = 50
     worldgraph_vertex_list = pyglet.graphics.vertex_list(1, 'v3f', 'c3B')
     cell_vertex_list = pyglet.graphics.vertex_list(1, 'v3f', 'c3B')
+    cell_bp_nums = dict()
 
     def __init__(self, width, height, title=''):
         super(Window, self).__init__(width, height, title)
         glClearColor(0, 0, 0, 1)
         glEnable(GL_DEPTH_TEST)
-        #everett_importer.construct_worldgraph_verts(self.worldgraph_vertex_list)
-        everett_importer.construct_cell_vertex_list(self.cell_vertex_list)
+        everett_importer.construct_cell_vertex_list(self.cell_vertex_list, self.cell_bp_nums)
+        everett_importer.update_cells_with_land_colours(self.cell_vertex_list, self.cell_bp_nums)
 
     def draw_water_sphere(self):
         glColor3f(0.015,0.02,0.07)
@@ -38,7 +39,6 @@ class Window(pyglet.window.Window):
         # TODO: Don't define new sphere on every draw?
         #self.draw_water_sphere()
 
-        #self.worldgraph_vertex_list.draw(pyglet.gl.GL_POINTS)
         self.cell_vertex_list.draw(pyglet.gl.GL_TRIANGLES)
 
         glPopMatrix()
@@ -54,12 +54,12 @@ class Window(pyglet.window.Window):
         glLoadIdentity()
 
         aspectRatio = width / height
-        gluPerspective(90, aspectRatio, 1, 1000)
+        gluPerspective(60, aspectRatio, 1, 1000)
 
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         # Camera translation
-        glTranslatef(0, 0, -2)
+        glTranslatef(0, 0, -2.25)
 
 
     def on_text_motion(self, motion):

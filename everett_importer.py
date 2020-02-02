@@ -4,10 +4,13 @@ import random
 from everett.worldgraph import world
 from everett.worldgenerators import world_three
 
-world = world_three.generate_world(seed=random.randint(1,1000), total_cells_desired=2000)
+#world = world_three.generate_world(seed=random.randint(1,1000), total_cells_desired=1000)
+world = world_three.generate_world(seed=954, total_cells_desired=1000)
 
 planet_centre_coord = [0,0]
 planet_drawn_radius = 10
+
+id_to_vertex_idx = dict()
 
 def random_c3B_colour():
     return [random.randint(0,255),random.randint(0,255), random.randint(0,255)]
@@ -44,13 +47,11 @@ def construct_worldgraph_verts(worldgraph_vertex_list):
         colours.extend(random_c3B_colour() * land_size)
     worldgraph_vertex_list.colors[:] = colours
 
-def construct_cell_vertex_list(cell_vertex_list):
+def construct_cell_vertex_list(cell_vertex_list, cell_bp_nums):
     all_land_cell_verts = list()
     land_cell_colours = list()
     for n, cell_id in enumerate(world.node_manager.all_centre_nodes):
         cell_verts = []
-        if random.random() < 0.0: # Debug. Render 10% only.
-            continue
 
         cell_centre_point = world.node_manager.cartesian_locs[cell_id]
         bps = list(world.node_manager.boundary_nodes[cell_id])
@@ -59,9 +60,13 @@ def construct_cell_vertex_list(cell_vertex_list):
             cell_verts.extend(world.node_manager.cartesian_locs[bps[i-1]])
             cell_verts.extend(world.node_manager.cartesian_locs[bps[i]])
 
-        cols = random_c3B_colour() * (len(cell_verts)//3)
+        cols = [0, 0, 240] * (len(cell_verts)//3) # All blue
+        #cols = random_c3B_colour() * (len(cell_verts)//3) # Random colour
         land_cell_colours.extend(cols)
         all_land_cell_verts.extend(cell_verts)
+
+        id_to_vertex_idx[cell_id] = len(all_land_cell_verts)
+        cell_bp_nums[cell_id] = len(bps)+1
 
     # Copy vertex information into pyglet vertex_list
     num_verts = len(all_land_cell_verts)//3
@@ -69,4 +74,9 @@ def construct_cell_vertex_list(cell_vertex_list):
     cell_vertex_list.vertices[:] = all_land_cell_verts
     cell_vertex_list.colors[:] = land_cell_colours
 
-
+def update_cells_with_land_colours(cell_vertex_list, cell_bp_nums):
+    for n, cell_id in enumerate(world.node_manager.land_node_ids):
+        start = id_to_vertex_idx[cell_id]
+        total_verts = cell_bp_nums[cell_id]
+        end = start + total_verts*3
+        cell_vertex_list.colors[start:end] = [0, 210, 0]*total_verts
