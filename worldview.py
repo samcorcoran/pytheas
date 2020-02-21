@@ -11,16 +11,35 @@ class Window(pyglet.window.Window):
 
     # Cube 3D start rotation
     xRotation = yRotation = 50
-    worldgraph_vertex_list = pyglet.graphics.vertex_list(1, 'v3f', 'c3B')
-    cell_vertex_list = pyglet.graphics.vertex_list(1, 'v3f', 'c3B')
+
+    indexed_domain = None
+    indexed_vertex_list = None
+
     cell_bp_nums = dict()
 
     def __init__(self, width, height, title=''):
         super(Window, self).__init__(width, height, title)
         glClearColor(0, 0, 0, 1)
         glEnable(GL_DEPTH_TEST)
-        everett_importer.construct_cell_vertex_list(self.cell_vertex_list, self.cell_bp_nums)
-        everett_importer.update_cells_with_land_colours(self.cell_vertex_list, self.cell_bp_nums)
+        self.construct_world_for_drawing()
+
+    def construct_world_for_drawing(self):
+        num_nodes = 0
+        verts = list()
+        node_ids_to_vert_idx = dict()
+        everett_importer.construct_node_verts(num_nodes, verts, node_ids_to_vert_idx)
+        # Create equal number of colour triplets
+        vert_colours = everett_importer.construct_blue_colour_list(num_nodes)
+
+        # Create vertex domain defining attribute usage formats
+        indexed_domain = pyglet.graphics.vertexdomain.create_indexed_domain('v3f/dynamic', 'c3B/dynamic')
+        # https://pyglet.readthedocs.io/en/stable/modules/graphics/vertexdomain.html#pyglet.graphics.vertexdomain.IndexedVertexList
+
+        # Add indices to vertex list
+        indices = everett_importer.construct_cell_indicies(node_ids_to_vert_idx)
+
+        indexed_vertex_list = indexed_domain.create(num_nodes, len(indices))
+        indexed_vertex_list.indices = indices
 
     def draw_water_sphere(self):
         glColor3f(0.015,0.02,0.07)
