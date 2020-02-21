@@ -48,17 +48,18 @@ def construct_worldgraph_verts(worldgraph_vertex_list):
     worldgraph_vertex_list.colors[:] = colours
 
 def construct_cell_vertex_list(cell_vertex_list, cell_bp_nums):
+    nm = world.node_manager
     all_land_cell_verts = list()
     land_cell_colours = list()
-    for n, cell_id in enumerate(world.node_manager.all_centre_nodes):
+    for n, cell_id in enumerate(nm.cells):
         cell_verts = []
 
-        cell_centre_point = world.node_manager.cartesian_locs[cell_id]
-        bps = list(world.node_manager.boundary_nodes[cell_id])
+        cell_centre_point = nm.cartesian_locs[cell_id]
+        bps = list(nm.get_boundary_nodes_of(cell_id))
         for i, bp in enumerate(bps):
             cell_verts.extend(cell_centre_point)
-            cell_verts.extend(world.node_manager.cartesian_locs[bps[i-1]])
-            cell_verts.extend(world.node_manager.cartesian_locs[bps[i]])
+            cell_verts.extend(nm.cartesian_locs[bps[i-1]])
+            cell_verts.extend(nm.cartesian_locs[bps[i]])
 
         cols = [0, 0, 240] * (len(cell_verts)//3) # All blue
         #cols = random_c3B_colour() * (len(cell_verts)//3) # Random colour
@@ -75,7 +76,8 @@ def construct_cell_vertex_list(cell_vertex_list, cell_bp_nums):
     cell_vertex_list.colors[:] = land_cell_colours
 
 def update_cells_with_land_colours(cell_vertex_list, cell_bp_nums):
-    for n, cell_id in enumerate(world.node_manager.land_node_ids):
+    nm = world.node_manager
+    for n, cell_id in enumerate(nm.land_node_ids):
         start = id_to_vertex_idx[cell_id]
         total_verts = cell_bp_nums[cell_id]
         end = start + total_verts*3
