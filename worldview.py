@@ -27,19 +27,21 @@ class Window(pyglet.window.Window):
         num_nodes = 0
         verts = list()
         node_ids_to_vert_idx = dict()
-        everett_importer.construct_node_verts(num_nodes, verts, node_ids_to_vert_idx)
+        num_nodes = everett_importer.construct_node_verts(num_nodes, verts, node_ids_to_vert_idx)
+
         # Create equal number of colour triplets
-        vert_colours = everett_importer.construct_blue_colour_list(num_nodes)
+        vert_colours = everett_importer.construct_random_colour_list(num_nodes)
 
         # Create vertex domain defining attribute usage formats
         indexed_domain = pyglet.graphics.vertexdomain.create_indexed_domain('v3f/dynamic', 'c3B/dynamic')
-        # https://pyglet.readthedocs.io/en/stable/modules/graphics/vertexdomain.html#pyglet.graphics.vertexdomain.IndexedVertexList
 
         # Add indices to vertex list
         indices = everett_importer.construct_cell_indicies(node_ids_to_vert_idx)
 
-        indexed_vertex_list = indexed_domain.create(num_nodes, len(indices))
-        indexed_vertex_list.indices = indices
+        self.indexed_vertex_list = indexed_domain.create(num_nodes, len(indices))
+        self.indexed_vertex_list.vertices = verts
+        self.indexed_vertex_list.indices = indices
+        self.indexed_vertex_list.colors = vert_colours
 
     def draw_water_sphere(self):
         glColor3f(0.015,0.02,0.07)
@@ -58,8 +60,8 @@ class Window(pyglet.window.Window):
         # TODO: Don't define new sphere on every draw?
         #self.draw_water_sphere()
 
-        self.cell_vertex_list.draw(pyglet.gl.GL_TRIANGLES)
-
+        #self.cell_vertex_list.draw(pyglet.gl.GL_TRIANGLES)
+        self.indexed_vertex_list.draw(pyglet.gl.GL_POINTS)
         glPopMatrix()
 
         #window.flip()

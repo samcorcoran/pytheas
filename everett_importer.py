@@ -5,7 +5,7 @@ from everett.worldgraph import world
 from everett.worldgenerators import world_three
 
 #world = world_three.generate_world(seed=random.randint(1,1000), total_cells_desired=1000)
-world = world_three.generate_world(seed=954, total_cells_desired=2000)
+world = world_three.generate_world(seed=954, total_cells_desired=10000)
 
 planet_centre_coord = [0,0]
 planet_drawn_radius = 10
@@ -77,10 +77,16 @@ def construct_node_verts(num_verts, verts, node_ids_to_vert_idx):
         verts.extend(nm.cartesian_locs[node_id])
         # Store index in vert
         node_ids_to_vert_idx[node_id] = next_vert_idx
+    return num_verts
 
 def construct_blue_colour_list(num_verts):
-    #return [40, 40, 240] * num_verts
-    return random_c3B_colour() * num_verts
+    return [40, 40, 240] * num_verts
+
+def construct_random_colour_list(num_verts):
+    vert_colours = list()
+    for n in range(num_verts):
+        vert_colours.extend(random_c3B_colour())
+    return vert_colours
 
 def construct_cell_indicies(node_ids_to_vert_idx):
     nm = world.node_manager
