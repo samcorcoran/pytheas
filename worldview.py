@@ -44,7 +44,7 @@ class Window(pyglet.window.Window):
     def draw_water_sphere(self):
         glColor3f(0.015,0.02,0.07)
         sphere = gluNewQuadric()
-        gluSphere(sphere, 10.0, 100, 100)
+        gluSphere(sphere, 1.0, 100, 100)
 
     def on_draw(self):
         # Clear the current GL Window
