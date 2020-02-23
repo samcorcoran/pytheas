@@ -30,7 +30,7 @@ class Window(pyglet.window.Window):
         num_nodes = everett_importer.construct_node_verts(num_nodes, verts, node_ids_to_vert_idx)
         print("num nodes: " + str(num_nodes))
         # Create equal number of colour triplets
-        vert_colours = everett_importer.construct_random_colour_list(num_nodes)
+        vert_colours = everett_importer.construct_blue_colour_list(num_nodes)
 
         # Create vertex domain defining attribute usage formats
         indexed_domain = pyglet.graphics.vertexdomain.create_indexed_domain('v3f/static', 'c3B/dynamic')

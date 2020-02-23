@@ -78,7 +78,7 @@ def construct_node_verts(num_verts, verts, node_ids_to_vert_idx):
     return num_verts
 
 def construct_blue_colour_list(num_verts):
-    return [40, 40, 240] * num_verts
+    return [20, 20, 80] * num_verts
 
 def construct_random_colour_list(num_verts):
     vert_colours = list()
