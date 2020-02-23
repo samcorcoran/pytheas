@@ -5,12 +5,12 @@ from everett.worldgraph import world
 from everett.worldgenerators import world_three
 
 #world = world_three.generate_world(seed=random.randint(1,1000), total_cells_desired=1000)
-world = world_three.generate_world(seed=954, total_cells_desired=10000)
+world = world_three.generate_world(seed=954, total_cells_desired=4000)
 
 planet_centre_coord = [0,0]
 planet_drawn_radius = 10
 
-id_to_vertex_idx = dict()
+node_ids_to_vert_idx = dict()
 
 def random_c3B_colour():
     return [random.randint(0,255),random.randint(0,255), random.randint(0,255)]
@@ -61,7 +61,7 @@ def construct_cell_vertex_list(cell_vertex_list, cell_bp_nums):
             cell_verts.extend(nm.cartesian_locs[bps[i-1]])
             cell_verts.extend(nm.cartesian_locs[bps[i]])
 
-def construct_node_verts(num_verts, verts, node_ids_to_vert_idx):
+def construct_node_verts(num_verts, verts):
     nm = world.node_manager
     for i, node_id in enumerate(nm.cells):
         # Add node to list
@@ -86,7 +86,7 @@ def construct_random_colour_list(num_verts):
         vert_colours.extend(random_c3B_colour())
     return vert_colours
 
-def construct_cell_indices(node_ids_to_vert_idx):
+def construct_cell_indices():
     nm = world.node_manager
     cell_triangle_idxs = list()
     for i, cell_id in enumerate(nm.cells):
@@ -100,10 +100,10 @@ def construct_cell_indices(node_ids_to_vert_idx):
             cell_triangle_idxs.append(boundary_node_indices[i])
     return cell_triangle_idxs
 
-def update_cells_with_land_colours(cell_vertex_list, cell_bp_nums):
+def update_cells_with_land_colours(indexed_vertex_list):
     nm = world.node_manager
-    for n, cell_id in enumerate(nm.land_node_ids):
-        start = id_to_vertex_idx[cell_id]
-        total_verts = (cell_bp_nums[cell_id]*3)
-        end = start + total_verts*3
-        cell_vertex_list.colors[start:end] = [0, 210, 0]*total_verts
+    for n, node_id in enumerate(nm.land_node_ids):
+        idx = node_ids_to_vert_idx[node_id]
+        start = idx * 3
+        end = start + 3
+        indexed_vertex_list.colors[start:end] = [0, 210, 0]
