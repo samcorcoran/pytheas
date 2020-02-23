@@ -65,18 +65,16 @@ def construct_node_verts(num_verts, verts, node_ids_to_vert_idx):
     nm = world.node_manager
     for i, node_id in enumerate(nm.cells):
         # Add node to list
-        next_vert_idx = len(verts)
-        num_verts += 1
         verts.extend(nm.cartesian_locs[node_id])
         # Store index in vert
-        node_ids_to_vert_idx[node_id] = next_vert_idx
+        node_ids_to_vert_idx[node_id] = num_verts
+        num_verts += 1
     for i, node_id in enumerate(nm.all_boundary_nodes):
         # Add node to list
-        next_vert_idx = len(verts)
-        num_verts += 1
         verts.extend(nm.cartesian_locs[node_id])
         # Store index in vert
-        node_ids_to_vert_idx[node_id] = next_vert_idx
+        node_ids_to_vert_idx[node_id] = num_verts
+        num_verts += 1
     return num_verts
 
 def construct_blue_colour_list(num_verts):
@@ -88,17 +86,18 @@ def construct_random_colour_list(num_verts):
         vert_colours.extend(random_c3B_colour())
     return vert_colours
 
-def construct_cell_indicies(node_ids_to_vert_idx):
+def construct_cell_indices(node_ids_to_vert_idx):
     nm = world.node_manager
     cell_triangle_idxs = list()
     for i, cell_id in enumerate(nm.cells):
         cell_centre_vert_idx = node_ids_to_vert_idx[cell_id]
-        boundary_node_ids = list(nm.boundary_nodes[cell_id])
+        # Convert everett node_ids to pytheas rendering indices
+        boundary_node_indices = [node_ids_to_vert_idx[bn_id] for bn_id in nm.boundary_nodes[cell_id]]
         # Add a triplet of indices for each triangle segment (i.e. per boundary point)
-        for i in range(len(boundary_node_ids)):
+        for i in range(len(boundary_node_indices)):
             cell_triangle_idxs.append(cell_centre_vert_idx)
-            cell_triangle_idxs.append(node_ids_to_vert_idx[boundary_node_ids[i-1]])
-            cell_triangle_idxs.append(node_ids_to_vert_idx[boundary_node_ids[i]])
+            cell_triangle_idxs.append(boundary_node_indices[i-1])
+            cell_triangle_idxs.append(boundary_node_indices[i])
     return cell_triangle_idxs
 
 def update_cells_with_land_colours(cell_vertex_list, cell_bp_nums):

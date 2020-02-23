@@ -28,15 +28,15 @@ class Window(pyglet.window.Window):
         verts = list()
         node_ids_to_vert_idx = dict()
         num_nodes = everett_importer.construct_node_verts(num_nodes, verts, node_ids_to_vert_idx)
-
+        print("num nodes: " + str(num_nodes))
         # Create equal number of colour triplets
         vert_colours = everett_importer.construct_random_colour_list(num_nodes)
 
         # Create vertex domain defining attribute usage formats
-        indexed_domain = pyglet.graphics.vertexdomain.create_indexed_domain('v3f/dynamic', 'c3B/dynamic')
+        indexed_domain = pyglet.graphics.vertexdomain.create_indexed_domain('v3f/static', 'c3B/dynamic')
 
         # Add indices to vertex list
-        indices = everett_importer.construct_cell_indicies(node_ids_to_vert_idx)
+        indices = everett_importer.construct_cell_indices(node_ids_to_vert_idx)
 
         self.indexed_vertex_list = indexed_domain.create(num_nodes, len(indices))
         self.indexed_vertex_list.vertices = verts
@@ -61,7 +61,7 @@ class Window(pyglet.window.Window):
         #self.draw_water_sphere()
 
         #self.cell_vertex_list.draw(pyglet.gl.GL_TRIANGLES)
-        self.indexed_vertex_list.draw(pyglet.gl.GL_POINTS)
+        self.indexed_vertex_list.draw(pyglet.gl.GL_TRIANGLES)
         glPopMatrix()
 
         #window.flip()
@@ -75,13 +75,14 @@ class Window(pyglet.window.Window):
         glLoadIdentity()
 
         aspectRatio = width / height
-        gluPerspective(60, aspectRatio, 1, 1000)
+        camera_angle = 60
+        gluPerspective(camera_angle, aspectRatio, 1, 1000)
 
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         # Camera translation
-        glTranslatef(0, 0, -2.25)
-
+        camera_distance = -3
+        glTranslatef(0, 0, camera_distance)
 
     def on_text_motion(self, motion):
         if motion == key.UP:
