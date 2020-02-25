@@ -15,8 +15,6 @@ class Window(pyglet.window.Window):
     indexed_domain = None
     indexed_vertex_list = None
 
-    cell_bp_nums = dict()
-
     def __init__(self, width, height, title=''):
         super(Window, self).__init__(width, height, title)
         glClearColor(0, 0, 0, 1)
@@ -57,14 +55,8 @@ class Window(pyglet.window.Window):
         glRotatef(self.xRotation, 1, 0, 0)
         glRotatef(self.yRotation, 0, 1, 0)
 
-        # TODO: Don't define new sphere on every draw?
-        #self.draw_water_sphere()
-
-        #self.cell_vertex_list.draw(pyglet.gl.GL_TRIANGLES)
         self.indexed_vertex_list.draw(pyglet.gl.GL_TRIANGLES)
         glPopMatrix()
-
-        #window.flip()
 
     def on_resize(self, width, height):
         # set the Viewport

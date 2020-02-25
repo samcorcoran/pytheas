@@ -47,20 +47,6 @@ def construct_worldgraph_verts(worldgraph_vertex_list):
         colours.extend(random_c3B_colour() * land_size)
     worldgraph_vertex_list.colors[:] = colours
 
-def construct_cell_vertex_list(cell_vertex_list, cell_bp_nums):
-    nm = world.node_manager
-    all_land_cell_verts = list()
-    land_cell_colours = list()
-    for n, cell_id in enumerate(nm.cells):
-        cell_verts = []
-
-        cell_centre_point = nm.cartesian_locs[cell_id]
-        bps = list(nm.get_boundary_nodes_of(cell_id))
-        for i, bp in enumerate(bps):
-            cell_verts.extend(cell_centre_point)
-            cell_verts.extend(nm.cartesian_locs[bps[i-1]])
-            cell_verts.extend(nm.cartesian_locs[bps[i]])
-
 def construct_node_verts(num_verts, verts):
     nm = world.node_manager
     for i, node_id in enumerate(nm.cells):
