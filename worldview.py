@@ -7,6 +7,16 @@ window_height = 780
 window_width = 1080
 rotation_increment = 2
 
+# Scrolling
+scroll_levels = 20
+current_scroll_level = 5
+# Camera distance scrolling
+closest_camera_distance = -2
+furthest_camera_distance = -3
+# Camera angle scrolling
+widest_camera_angle = 100
+narrowest_camera_angle = 10
+
 class Window(pyglet.window.Window):
 
     # Cube 3D start rotation
@@ -67,13 +77,15 @@ class Window(pyglet.window.Window):
         glLoadIdentity()
 
         aspectRatio = width / height
-        camera_angle = 60
+        global max_scroll, max_camera_angle, default_camera_angle
+        scroll = max(current_scroll_level, 0) / (scroll_levels)
+        camera_angle = narrowest_camera_angle + (widest_camera_angle - narrowest_camera_angle)*(1-(current_scroll_level/scroll_levels))
         gluPerspective(camera_angle, aspectRatio, 1, 1000)
 
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
-        # Camera translation
-        camera_distance = -3
+        # Camera translation, incorporating mouse scroll
+        camera_distance = closest_camera_distance + (furthest_camera_distance - closest_camera_distance)*(1- (current_scroll_level/scroll_levels))
         glTranslatef(0, 0, camera_distance)
 
     def on_text_motion(self, motion):
@@ -86,6 +98,13 @@ class Window(pyglet.window.Window):
         elif motion == key.RIGHT:
             self.yRotation += rotation_increment
 
+    def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
+        global current_scroll_level
+        global min_scroll
+        global max_scroll
+        # Update and clamp
+        current_scroll_level = min(max(current_scroll_level + scroll_y, 1), scroll_levels)
+        self.on_resize(window_width, window_height)
 
 if __name__ == '__main__':
    Window(window_width, window_height, 'Everett Worldview')
