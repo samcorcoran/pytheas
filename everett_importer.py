@@ -4,13 +4,16 @@ import random
 from everett.worldgraph import world
 from everett.worldgenerators import world_three
 
-#world = world_three.generate_world(seed=random.randint(1,1000), total_cells_desired=1000)
-world = world_three.generate_world(seed=954, total_cells_desired=4000)
+world = None
 
 planet_centre_coord = [0,0]
 planet_drawn_radius = 10
 
 node_ids_to_vert_idx = dict()
+
+def generate_world():
+    global world
+    world = world_three.generate_world(seed=954, total_cells_desired=40000)
 
 def random_c3B_colour():
     return [random.randint(0,255),random.randint(0,255), random.randint(0,255)]
