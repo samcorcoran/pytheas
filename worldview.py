@@ -73,6 +73,10 @@ class Window(pyglet.window.Window):
         glRotatef(self.yRotation, 0, 1, 0)
 
         self.indexed_vertex_list.draw(pyglet.gl.GL_TRIANGLES)
+
+        # Draw polar line
+        pyglet.graphics.draw(2, pyglet.gl.GL_LINES,('v2f', (0, 1.3, 0, -1.3)))
+
         glPopMatrix()
 
     def on_resize(self, width, height):
