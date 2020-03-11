@@ -1,6 +1,8 @@
 import pyglet
 from pyglet.gl import *
 from pyglet.window import key
+from pyglet.window.key import KeyStateHandler
+
 import everett_importer
 
 window_height = 780
@@ -17,6 +19,7 @@ furthest_camera_distance = -3
 widest_camera_angle = 100
 narrowest_camera_angle = 10
 
+keys = None
 
 class Window(pyglet.window.Window):
 
@@ -94,13 +97,14 @@ class Window(pyglet.window.Window):
         glTranslatef(0, 0, camera_distance)
 
     def on_text_motion(self, motion):
-        if motion == key.UP:
-             self.xRotation -= rotation_increment
-        elif motion == key.DOWN:
+        global keys
+        if keys[key.UP]:
+            self.xRotation -= rotation_increment
+        if keys[key.DOWN]:
             self.xRotation += rotation_increment
-        elif motion == key.LEFT:
+        if keys[key.LEFT]:
             self.yRotation -= rotation_increment
-        elif motion == key.RIGHT:
+        if keys[key.RIGHT]:
             self.yRotation += rotation_increment
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
@@ -113,9 +117,13 @@ class Window(pyglet.window.Window):
 
 
 def main():
+    global keys
     everett_importer.generate_world()
 
-    Window(window_width, window_height, 'Everett Worldview')
+    window = Window(window_width, window_height, 'Everett Worldview')
+    keys = KeyStateHandler()
+    window.push_handlers(keys)
+
     pyglet.app.run()
 
 
