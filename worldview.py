@@ -40,7 +40,7 @@ class Window(pyglet.window.Window):
     def construct_world_for_drawing(self):
         num_nodes = 0
         verts = list()
-        num_nodes = everett_importer.construct_node_verts(num_nodes, verts)
+        num_nodes = everett_importer.construct_node_verts_with_boundary_duplicates(num_nodes, verts)
         print("num nodes: " + str(num_nodes))
         # Create equal number of colour triplets
         vert_colours = everett_importer.construct_blue_colour_list(num_nodes)

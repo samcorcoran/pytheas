@@ -10,6 +10,7 @@ planet_centre_coord = [0,0]
 planet_drawn_radius = 10
 
 node_ids_to_vert_idx = dict()
+centre_node_id_to_boundary_vert_idx_list = dict()
 
 def generate_world():
     global world
@@ -50,6 +51,25 @@ def construct_worldgraph_verts(worldgraph_vertex_list):
         colours.extend(random_c3B_colour() * land_size)
     worldgraph_vertex_list.colors[:] = colours
 
+def construct_node_verts_with_boundary_duplicates(num_verts, verts):
+    nm = world.node_manager
+    for i, node_id in enumerate(nm.cells):
+        # Add centre node to list
+        verts.extend(nm.cartesian_locs[node_id])
+        # Store index in vert
+        node_ids_to_vert_idx[node_id] = num_verts
+        num_verts += 1
+        # Now add its boundary points
+        centre_node_id_to_boundary_vert_idx_list[node_id] = list()
+        for bp_id in nm.get_boundary_nodes_of(node_id):
+            verts.extend(nm.cartesian_locs[bp_id])
+            # Remember the id's direct mapping to verts
+            node_ids_to_vert_idx[node_id] = num_verts
+            # Also remember via which node was the centre
+            centre_node_id_to_boundary_vert_idx_list[node_id].append(num_verts)
+            num_verts += 1
+    return num_verts
+
 def construct_node_verts(num_verts, verts):
     nm = world.node_manager
     for i, node_id in enumerate(nm.cells):
@@ -81,7 +101,7 @@ def construct_cell_indices():
     for i, cell_id in enumerate(nm.cells):
         cell_centre_vert_idx = node_ids_to_vert_idx[cell_id]
         # Convert everett node_ids to pytheas rendering indices
-        boundary_node_indices = [node_ids_to_vert_idx[bn_id] for bn_id in nm.boundary_nodes[cell_id]]
+        boundary_node_indices = centre_node_id_to_boundary_vert_idx_list[cell_id]
         # Add a triplet of indices for each triangle segment (i.e. per boundary point)
         for i in range(len(boundary_node_indices)):
             cell_triangle_idxs.append(cell_centre_vert_idx)
@@ -91,8 +111,17 @@ def construct_cell_indices():
 
 def update_cells_with_land_colours(indexed_vertex_list):
     nm = world.node_manager
+    land_colour = [70, 160, 20]
     for n, node_id in enumerate(nm.land_node_ids):
-        idx = node_ids_to_vert_idx[node_id]
-        start = idx * 3
+        update_cell_with_colour(indexed_vertex_list, node_id, land_colour)
+
+def update_cell_with_colour(indexed_vertex_list, center_node_id, colour):
+    centre_idx = node_ids_to_vert_idx[center_node_id]
+    start = centre_idx * 3
+    end = start + 3
+    indexed_vertex_list.colors[start:end] = colour
+    for bp_idx in centre_node_id_to_boundary_vert_idx_list[center_node_id]:
+        start = bp_idx * 3
         end = start + 3
-        indexed_vertex_list.colors[start:end] = [0, 210, 0]
+        indexed_vertex_list.colors[start:end] = colour
+
