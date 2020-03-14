@@ -17,7 +17,7 @@ def generate_world():
     world = world_three.generate_world(seed=954, total_cells_desired=40000)
 
 def random_c3B_colour():
-    return [random.randint(0,255),random.randint(0,255), random.randint(0,255)]
+    return [random.randint(0,255), random.randint(0,255), random.randint(0,255)]
 
 def colour_generator(num_colours):
     # Generates debug colours (stronger red for each successively)
