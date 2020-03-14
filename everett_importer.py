@@ -112,8 +112,8 @@ def construct_cell_indices():
 def update_cells_with_land_colours(indexed_vertex_list):
     nm = world.node_manager
     land_colour = [70, 160, 20]
-    for n, node_id in enumerate(nm.land_node_ids):
-        update_cell_with_colour(indexed_vertex_list, node_id, land_colour)
+    for n, cell_centre_id in enumerate(nm.land_node_ids):
+        update_cell_with_colour(indexed_vertex_list, cell_centre_id, land_colour)
 
 def update_cell_with_colour(indexed_vertex_list, center_node_id, colour):
     centre_idx = node_ids_to_vert_idx[center_node_id]
@@ -125,3 +125,16 @@ def update_cell_with_colour(indexed_vertex_list, center_node_id, colour):
         end = start + 3
         indexed_vertex_list.colors[start:end] = colour
 
+def update_cells_with_altitude_colours(indexed_vertex_list):
+    from everett.features.featuretaxonomy import Feature
+    nm = world.node_manager
+    for n, cell_centre_id in enumerate(nm.land_node_ids):
+        cell_value = nm.get_feature(cell_centre_id, Feature.terrain_altitude)/10000
+        if cell_value >= 0:
+            cell_colour = [0, 50 + int(205*cell_value), 0]
+        else:
+            # Colour land cells with negative altitudes blue
+            cell_colour = [0, 0, int(255*(cell_value*-1))]
+            # TODO: Figure out why some land cells have negative altitudes
+            #cell_colour = [255, 0, 0]
+        update_cell_with_colour(indexed_vertex_list, cell_centre_id, cell_colour)
