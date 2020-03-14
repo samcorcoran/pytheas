@@ -1,8 +1,9 @@
 import pyglet
 from pyglet.gl import *
 from pyglet.window import key
+from pyglet.window.key import KeyStateHandler
+
 import everett_importer
-import tkinter as tk
 
 window_height = 780
 window_width = 1080
@@ -18,9 +19,7 @@ furthest_camera_distance = -3
 widest_camera_angle = 100
 narrowest_camera_angle = 10
 
-# GUI
-root = None
-label = None
+keys = None
 
 class Window(pyglet.window.Window):
 
@@ -62,8 +61,6 @@ class Window(pyglet.window.Window):
         gluSphere(sphere, 1.0, 100, 100)
 
     def on_draw(self):
-        tk_root.update()
-
         # Clear the current GL Window
         self.clear()
         # Push Matrix onto stack
@@ -100,13 +97,14 @@ class Window(pyglet.window.Window):
         glTranslatef(0, 0, camera_distance)
 
     def on_text_motion(self, motion):
-        if motion == key.UP:
-             self.xRotation -= rotation_increment
-        elif motion == key.DOWN:
+        global keys
+        if keys[key.UP]:
+            self.xRotation -= rotation_increment
+        if keys[key.DOWN]:
             self.xRotation += rotation_increment
-        elif motion == key.LEFT:
+        if keys[key.LEFT]:
             self.yRotation -= rotation_increment
-        elif motion == key.RIGHT:
+        if keys[key.RIGHT]:
             self.yRotation += rotation_increment
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
@@ -117,10 +115,21 @@ class Window(pyglet.window.Window):
         current_scroll_level = min(max(current_scroll_level + scroll_y, 1), scroll_levels)
         self.on_resize(window_width, window_height)
 
-if __name__ == '__main__':
-    tk_root = tk.Tk()
-    label = tk.Label(tk_root, text='Pytheas Toolbox')
+
+def main():
+    global keys
     everett_importer.generate_world()
 
-    Window(window_width, window_height, 'Everett Worldview')
+    window = Window(window_width, window_height, 'Everett Worldview')
+    keys = KeyStateHandler()
+    window.push_handlers(keys)
+
     pyglet.app.run()
+
+
+def exit_app():
+    pyglet.app.exit()
+
+
+if __name__ == '__main__':
+    main()
