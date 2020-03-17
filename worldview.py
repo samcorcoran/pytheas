@@ -37,6 +37,7 @@ class Window(pyglet.window.Window):
         everett_importer.update_cells_with_land_colours(self.indexed_vertex_list)
         everett_importer.update_cells_with_altitude_colours(self.indexed_vertex_list)
         everett_importer.update_cells_with_whittaker_colours(self.indexed_vertex_list)
+        everett_importer.update_cells_with_temperature_colours(self.indexed_vertex_list)
 
     def construct_world_for_drawing(self):
         num_nodes = 0

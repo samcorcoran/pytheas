@@ -168,3 +168,13 @@ def update_cells_with_whittaker_colours(indexed_vertex_list):
         b = nm.get_feature(cell_centre_id, Feature.render_colour_blue)
         #cell_value = nm.get_quality(cell_centre_id, Quality.geography_biome_whittaker)
         update_cell_with_colour(indexed_vertex_list, cell_centre_id, [r, g, b])
+
+@print_timer
+def update_cells_with_temperature_colours(indexed_vertex_list, min_temp=-10, max_temp=30):
+    from everett.features.featuretaxonomy import Feature
+    nm = world.node_manager
+    for n, cell_centre_id in enumerate(nm.cells):
+        cell_value = nm.get_feature(cell_centre_id, Feature.surface_temperature)
+        cell_value = (cell_value + (-1 * min_temp)) / (max_temp + (-1 * min_temp))
+        cell_colour = [int(80*cell_value), int(50*cell_value), int(100*(1-cell_value))]
+        update_cell_with_colour(indexed_vertex_list, cell_centre_id, cell_colour)
