@@ -3,6 +3,7 @@ import math
 import random
 from everett.worldgraph import world
 from everett.worldgenerators import world_three
+from timeit import default_timer as timer
 
 world = None
 
@@ -11,6 +12,17 @@ planet_drawn_radius = 10
 
 node_ids_to_vert_idx = dict()
 centre_node_id_to_boundary_vert_idx_list = dict()
+
+def print_timer(func):
+    from functools import wraps
+    @wraps(func)
+    def wrapper(*args, **kw):
+        start = timer()
+        result = func(*args, **kw)
+        end = timer()
+        print("%r: %f ms" % (func.__name__, (end - start) * 1000))
+        return result
+    return wrapper
 
 def generate_world():
     global world
@@ -25,6 +37,7 @@ def colour_generator(num_colours):
     for n in range(num_colours):
         yield [(frac*2)+(frac*(n+1)), 0, 0]
 
+@print_timer
 def land_verts():
     # Construct worldgraph verts
     all_land_verts = list()
@@ -41,6 +54,7 @@ def land_verts():
         land_sizes.append(len(next_land_verts)//3)
     return all_land_verts, land_sizes
 
+@print_timer
 def construct_worldgraph_verts(worldgraph_vertex_list):
     all_land_verts, land_sizes = land_verts()
     total_land_verts = len(all_land_verts) // 3
@@ -51,6 +65,7 @@ def construct_worldgraph_verts(worldgraph_vertex_list):
         colours.extend(random_c3B_colour() * land_size)
     worldgraph_vertex_list.colors[:] = colours
 
+@print_timer
 def construct_node_verts_with_boundary_duplicates(num_verts, verts):
     nm = world.node_manager
     for i, node_id in enumerate(nm.cells):
@@ -70,6 +85,7 @@ def construct_node_verts_with_boundary_duplicates(num_verts, verts):
             num_verts += 1
     return num_verts
 
+@print_timer
 def construct_node_verts(num_verts, verts):
     nm = world.node_manager
     for i, node_id in enumerate(nm.cells):
@@ -95,6 +111,7 @@ def construct_random_colour_list(num_verts):
         vert_colours.extend(random_c3B_colour())
     return vert_colours
 
+@print_timer
 def construct_cell_indices():
     nm = world.node_manager
     cell_triangle_idxs = list()
@@ -109,6 +126,7 @@ def construct_cell_indices():
             cell_triangle_idxs.append(boundary_node_indices[i])
     return cell_triangle_idxs
 
+@print_timer
 def update_cells_with_land_colours(indexed_vertex_list):
     nm = world.node_manager
     land_colour = [70, 160, 20]
@@ -125,6 +143,7 @@ def update_cell_with_colour(indexed_vertex_list, center_node_id, colour):
         end = start + 3
         indexed_vertex_list.colors[start:end] = colour
 
+@print_timer
 def update_cells_with_altitude_colours(indexed_vertex_list):
     from everett.features.featuretaxonomy import Feature
     nm = world.node_manager
