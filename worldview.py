@@ -68,7 +68,7 @@ class Window(pyglet.window.Window):
         self.indexed_vertex_list.draw(pyglet.gl.GL_TRIANGLES)
 
         # Draw polar line
-        pyglet.graphics.draw(2, pyglet.gl.GL_LINES,('v2f', (0, 1.3, 0, -1.3)))
+        pyglet.graphics.draw(2, pyglet.gl.GL_LINES,('v3f', (0, 0, 1.3, 0, 0, -1.3)))
 
         glPopMatrix()
 
