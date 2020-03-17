@@ -166,7 +166,6 @@ def update_cells_with_whittaker_colours(indexed_vertex_list):
         r = nm.get_feature(cell_centre_id, Feature.render_colour_red)
         g = nm.get_feature(cell_centre_id, Feature.render_colour_green)
         b = nm.get_feature(cell_centre_id, Feature.render_colour_blue)
-        #cell_value = nm.get_quality(cell_centre_id, Quality.geography_biome_whittaker)
         update_cell_with_colour(indexed_vertex_list, cell_centre_id, [r, g, b])
 
 @print_timer
