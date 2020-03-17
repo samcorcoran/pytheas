@@ -157,3 +157,14 @@ def update_cells_with_altitude_colours(indexed_vertex_list):
             # TODO: Figure out why some land cells have negative altitudes
             #cell_colour = [255, 0, 0]
         update_cell_with_colour(indexed_vertex_list, cell_centre_id, cell_colour)
+
+@print_timer
+def update_cells_with_whittaker_colours(indexed_vertex_list):
+    from everett.features.featuretaxonomy import Feature
+    nm = world.node_manager
+    for n, cell_centre_id in enumerate(nm.land_node_ids):
+        r = nm.get_feature(cell_centre_id, Feature.render_colour_red)
+        g = nm.get_feature(cell_centre_id, Feature.render_colour_green)
+        b = nm.get_feature(cell_centre_id, Feature.render_colour_blue)
+        #cell_value = nm.get_quality(cell_centre_id, Quality.geography_biome_whittaker)
+        update_cell_with_colour(indexed_vertex_list, cell_centre_id, [r, g, b])
