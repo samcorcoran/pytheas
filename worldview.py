@@ -24,7 +24,9 @@ keys = None
 class Window(pyglet.window.Window):
 
     # Cube 3D start rotation
-    xRotation = yRotation = 50
+    xRotation = 90
+    yRotation = 0
+    zRotation = 0
 
     indexed_domain = None
     indexed_vertex_list = None
@@ -66,6 +68,8 @@ class Window(pyglet.window.Window):
 
         glRotatef(self.xRotation, 1, 0, 0)
         glRotatef(self.yRotation, 0, 1, 0)
+        glRotatef(self.zRotation, 0, 0, 1)
+
 
         self.indexed_vertex_list.draw(pyglet.gl.GL_TRIANGLES)
 
@@ -101,9 +105,9 @@ class Window(pyglet.window.Window):
         if keys[key.DOWN]:
             self.xRotation += rotation_increment
         if keys[key.LEFT]:
-            self.yRotation -= rotation_increment
+            self.zRotation -= rotation_increment
         if keys[key.RIGHT]:
-            self.yRotation += rotation_increment
+            self.zRotation += rotation_increment
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
         global current_scroll_level
