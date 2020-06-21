@@ -30,16 +30,14 @@ class Window(pyglet.window.Window):
 
     indexed_domain = None
     indexed_vertex_list = None
+    colouring_mode = 0
 
     def __init__(self, width, height, title=''):
         super(Window, self).__init__(width, height, title)
         glClearColor(0, 0, 0, 1)
         glEnable(GL_DEPTH_TEST)
         self.construct_world_for_drawing()
-        everett_importer.update_cells_with_land_colours(self.indexed_vertex_list)
-        everett_importer.update_cells_with_altitude_colours(self.indexed_vertex_list)
-        everett_importer.update_cells_with_whittaker_colours(self.indexed_vertex_list)
-        everett_importer.update_cells_with_temperature_colours(self.indexed_vertex_list)
+        self.set_colouring_mode(1)
 
     def construct_world_for_drawing(self):
         num_nodes = 0
@@ -105,9 +103,46 @@ class Window(pyglet.window.Window):
         if keys[key.DOWN]:
             self.xRotation += rotation_increment
         if keys[key.LEFT]:
-            self.zRotation -= rotation_increment
-        if keys[key.RIGHT]:
             self.zRotation += rotation_increment
+        if keys[key.RIGHT]:
+            self.zRotation -= rotation_increment
+
+    def on_key_press(self, symbol, modifiers):
+        if symbol == key._1:
+            self.set_colouring_mode(1)
+        if symbol == key._2:
+            self.set_colouring_mode(2)
+        if symbol == key._3:
+            self.set_colouring_mode(3)
+        if symbol == key._4:
+            self.set_colouring_mode(4)
+
+    def set_colouring_mode(self, new_render_mode):
+        if self.colouring_mode == new_render_mode:
+            return
+        self.colouring_mode = new_render_mode
+        recolour_ocean = False
+        # Recolour world
+        if self.colouring_mode == 1:
+            print("Mode 1. Land colouring")
+            everett_importer.update_land_cells_with_flat_colour(self.indexed_vertex_list)
+            recolour_ocean = True
+        if self.colouring_mode == 2:
+            print("Mode 2. Altitude colouring")
+            everett_importer.update_land_cells_with_altitude_colours(self.indexed_vertex_list)
+            recolour_ocean = True
+        if self.colouring_mode == 3:
+            print("Mode 3. Whittaker colouring")
+            everett_importer.update_land_cells_with_whittaker_colours(self.indexed_vertex_list)
+            recolour_ocean = True
+        if self.colouring_mode == 4:
+            print("Mode 4. Temperature colouring")
+            everett_importer.update_cells_with_temperature_colours(self.indexed_vertex_list)
+
+        # Some colouring schemes don't update all cells, so some mop-up is needed
+        if recolour_ocean:
+            everett_importer.update_ocean_cells_with_ocean_colours(self.indexed_vertex_list)
+
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
         global current_scroll_level

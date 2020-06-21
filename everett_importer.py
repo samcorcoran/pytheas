@@ -13,6 +13,8 @@ planet_drawn_radius = 10
 node_ids_to_vert_idx = dict()
 centre_node_id_to_boundary_vert_idx_list = dict()
 
+ocean_colour = [20, 20, 80]
+
 def print_timer(func):
     from functools import wraps
     @wraps(func)
@@ -24,6 +26,7 @@ def print_timer(func):
         return result
     return wrapper
 
+@print_timer
 def generate_world():
     global world
     world = world_three.generate_world(seed=954, total_cells_desired=40000)
@@ -103,7 +106,7 @@ def construct_node_verts(num_verts, verts):
     return num_verts
 
 def construct_blue_colour_list(num_verts):
-    return [20, 20, 80] * num_verts
+    return ocean_colour * num_verts
 
 def construct_random_colour_list(num_verts):
     vert_colours = list()
@@ -126,13 +129,6 @@ def construct_cell_indices():
             cell_triangle_idxs.append(boundary_node_indices[i])
     return cell_triangle_idxs
 
-@print_timer
-def update_cells_with_land_colours(indexed_vertex_list):
-    nm = world.node_manager
-    land_colour = [70, 160, 20]
-    for n, cell_centre_id in enumerate(nm.land_node_ids):
-        update_cell_with_colour(indexed_vertex_list, cell_centre_id, land_colour)
-
 def update_cell_with_colour(indexed_vertex_list, center_node_id, colour):
     centre_idx = node_ids_to_vert_idx[center_node_id]
     start = centre_idx * 3
@@ -144,7 +140,14 @@ def update_cell_with_colour(indexed_vertex_list, center_node_id, colour):
         indexed_vertex_list.colors[start:end] = colour
 
 @print_timer
-def update_cells_with_altitude_colours(indexed_vertex_list):
+def update_land_cells_with_flat_colour(indexed_vertex_list):
+    nm = world.node_manager
+    land_colour = [70, 160, 20]
+    for n, cell_centre_id in enumerate(nm.land_node_ids):
+        update_cell_with_colour(indexed_vertex_list, cell_centre_id, land_colour)
+
+@print_timer
+def update_land_cells_with_altitude_colours(indexed_vertex_list):
     from everett.features.featuretaxonomy import Feature
     nm = world.node_manager
     for n, cell_centre_id in enumerate(nm.land_node_ids):
@@ -159,7 +162,7 @@ def update_cells_with_altitude_colours(indexed_vertex_list):
         update_cell_with_colour(indexed_vertex_list, cell_centre_id, cell_colour)
 
 @print_timer
-def update_cells_with_whittaker_colours(indexed_vertex_list):
+def update_land_cells_with_whittaker_colours(indexed_vertex_list):
     from everett.features.featuretaxonomy import Feature
     nm = world.node_manager
     for n, cell_centre_id in enumerate(nm.land_node_ids):
@@ -177,3 +180,8 @@ def update_cells_with_temperature_colours(indexed_vertex_list, min_temp=-10, max
         cell_value = (cell_value + (-1 * min_temp)) / (max_temp + (-1 * min_temp))
         cell_colour = [int(80*cell_value), int(50*cell_value), int(100*(1-cell_value))]
         update_cell_with_colour(indexed_vertex_list, cell_centre_id, cell_colour)
+
+def update_ocean_cells_with_ocean_colours(indexed_vertex_list):
+    nm = world.node_manager
+    for n, cell_centre_id in enumerate(nm.ocean_node_ids):
+        update_cell_with_colour(indexed_vertex_list, cell_centre_id, ocean_colour)
