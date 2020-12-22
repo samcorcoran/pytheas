@@ -30,6 +30,14 @@ class Window(pyglet.window.Window):
     yRotation = 0
     zRotation = 0
 
+    # 90, 0, 0 degrees == 0N 0E lon lat
+    # <90 xRot is south pole
+    # >90 xRot is north pole
+    # 90 zRot is Asia
+    # So...
+    # Latitude = xRotation - 90
+    # Longitude = zRotation
+
     indexed_domain = None
     indexed_vertex_list = None
     colouring_mode = 0
