@@ -2,8 +2,10 @@ import pyglet
 from pyglet.gl import *
 from pyglet.window import key
 from pyglet.window.key import KeyStateHandler
+from everett_importer import construct_blue_colour_list
 
 import everett_importer
+import cell_colouring
 
 window_height = 780
 window_width = 1080
@@ -134,31 +136,9 @@ class Window(pyglet.window.Window):
             self.set_colouring_mode(0)
 
     def set_colouring_mode(self, new_render_mode):
-        if self.colouring_mode == new_render_mode:
-            return
         self.colouring_mode = new_render_mode
-        recolour_ocean = False
         # Recolour world
-        if self.colouring_mode == 1:
-            print("Mode 1. Land colouring")
-            everett_importer.update_land_cells_with_flat_colour(self.indexed_vertex_list)
-            recolour_ocean = True
-        if self.colouring_mode == 2:
-            print("Mode 2. Altitude colouring")
-            everett_importer.update_land_cells_with_altitude_colours(self.indexed_vertex_list)
-            recolour_ocean = True
-        if self.colouring_mode == 3:
-            print("Mode 3. Whittaker colouring")
-            everett_importer.update_land_cells_with_whittaker_colours(self.indexed_vertex_list)
-            recolour_ocean = True
-        if self.colouring_mode == 4:
-            print("Mode 4. Temperature colouring")
-            everett_importer.update_cells_with_temperature_colours(self.indexed_vertex_list)
-
-        # Some colouring schemes don't update all cells, so some mop-up is needed
-        if recolour_ocean:
-            everett_importer.update_ocean_cells_with_ocean_colours(self.indexed_vertex_list)
-
+        cell_colouring.update_all_cells_to_ocean(self.indexed_vertex_list)
         print("%s%d%s %s" % ("Mode ", new_render_mode, ".", self.numbered_options[new_render_mode][0]))
         self.numbered_options[new_render_mode][1](self.indexed_vertex_list)
 

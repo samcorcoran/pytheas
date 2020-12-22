@@ -1,9 +1,8 @@
 from pyglet.gl import *
-import math
-import random
 from everett.worldgraph import world
 from everett.worldgenerators import world_three
 
+import cell_colouring
 from print_timer import print_timer
 
 world = None
@@ -14,21 +13,10 @@ planet_drawn_radius = 10
 node_ids_to_vert_idx = dict()
 centre_node_id_to_boundary_vert_idx_list = dict()
 
-ocean_colour = [20, 20, 80]
-
 @print_timer
 def generate_world():
     global world
-    world = world_three.generate_world(seed=954, total_cells_desired=40000)
-
-def random_c3B_colour():
-    return [random.randint(0,255), random.randint(0,255), random.randint(0,255)]
-
-def colour_generator(num_colours):
-    # Generates debug colours (stronger red for each successively)
-    frac = 255//(num_colours+2)
-    for n in range(num_colours):
-        yield [(frac*2)+(frac*(n+1)), 0, 0]
+    world = world_three.generate_world(seed=954, total_cells_desired=50)
 
 @print_timer
 def land_verts():
@@ -55,11 +43,12 @@ def construct_worldgraph_verts(worldgraph_vertex_list):
     worldgraph_vertex_list.vertices[:] = all_land_verts
     colours = list()
     for land_size in land_sizes:
-        colours.extend(random_c3B_colour() * land_size)
+        colours.extend(cell_colouring.random_c3B_colour() * land_size)
     worldgraph_vertex_list.colors[:] = colours
 
 @print_timer
 def construct_node_verts_with_boundary_duplicates(num_verts, verts):
+    """ Populate verts and node-id-to-index mapping in centre_node_id_to_boundary_vert_idx_list """
     nm = world.node_manager
     for i, node_id in enumerate(nm.cells):
         # Add centre node to list
@@ -95,15 +84,6 @@ def construct_node_verts(num_verts, verts):
         num_verts += 1
     return num_verts
 
-def construct_blue_colour_list(num_verts):
-    return ocean_colour * num_verts
-
-def construct_random_colour_list(num_verts):
-    vert_colours = list()
-    for n in range(num_verts):
-        vert_colours.extend(random_c3B_colour())
-    return vert_colours
-
 @print_timer
 def construct_cell_indices():
     nm = world.node_manager
@@ -119,59 +99,17 @@ def construct_cell_indices():
             cell_triangle_idxs.append(boundary_node_indices[i])
     return cell_triangle_idxs
 
-def update_cell_with_colour(indexed_vertex_list, center_node_id, colour):
-    centre_idx = node_ids_to_vert_idx[center_node_id]
-    start = centre_idx * 3
-    end = start + 3
-    indexed_vertex_list.colors[start:end] = colour
-    for bp_idx in centre_node_id_to_boundary_vert_idx_list[center_node_id]:
-        start = bp_idx * 3
-        end = start + 3
-        indexed_vertex_list.colors[start:end] = colour
+def construct_blue_colour_list(num_verts):
+    return cell_colouring.ocean_colour * num_verts
 
-@print_timer
-def update_land_cells_with_flat_colour(indexed_vertex_list):
-    nm = world.node_manager
-    land_colour = [70, 160, 20]
-    for n, cell_centre_id in enumerate(nm.land_node_ids):
-        update_cell_with_colour(indexed_vertex_list, cell_centre_id, land_colour)
+def construct_random_colour_list(num_verts):
+    vert_colours = list()
+    for n in range(num_verts):
+        vert_colours.extend(cell_colouring.random_c3B_colour())
+    return vert_colours
 
-@print_timer
-def update_land_cells_with_altitude_colours(indexed_vertex_list):
-    from everett.features.featuretaxonomy import Feature
     nm = world.node_manager
-    for n, cell_centre_id in enumerate(nm.land_node_ids):
-        cell_value = nm.get_feature(cell_centre_id, Feature.terrain_altitude)/10000
-        if cell_value >= 0:
-            cell_colour = [0, 50 + int(205*cell_value), 0]
-        else:
-            # Colour land cells with negative altitudes blue
-            cell_colour = [0, 0, int(255*(cell_value*-1))]
-            # TODO: Figure out why some land cells have negative altitudes
-            #cell_colour = [255, 0, 0]
-        update_cell_with_colour(indexed_vertex_list, cell_centre_id, cell_colour)
 
-@print_timer
-def update_land_cells_with_whittaker_colours(indexed_vertex_list):
-    from everett.features.featuretaxonomy import Feature
-    nm = world.node_manager
-    for n, cell_centre_id in enumerate(nm.land_node_ids):
-        r = nm.get_feature(cell_centre_id, Feature.render_colour_red)
-        g = nm.get_feature(cell_centre_id, Feature.render_colour_green)
-        b = nm.get_feature(cell_centre_id, Feature.render_colour_blue)
-        update_cell_with_colour(indexed_vertex_list, cell_centre_id, [r, g, b])
 
-@print_timer
-def update_cells_with_temperature_colours(indexed_vertex_list, min_temp=-10, max_temp=30):
-    from everett.features.featuretaxonomy import Feature
-    nm = world.node_manager
-    for n, cell_centre_id in enumerate(nm.cells):
-        cell_value = nm.get_feature(cell_centre_id, Feature.surface_temperature)
-        cell_value = (cell_value + (-1 * min_temp)) / (max_temp + (-1 * min_temp))
-        cell_colour = [int(80*cell_value), int(50*cell_value), int(100*(1-cell_value))]
-        update_cell_with_colour(indexed_vertex_list, cell_centre_id, cell_colour)
 
-def update_ocean_cells_with_ocean_colours(indexed_vertex_list):
     nm = world.node_manager
-    for n, cell_centre_id in enumerate(nm.ocean_node_ids):
-        update_cell_with_colour(indexed_vertex_list, cell_centre_id, ocean_colour)
