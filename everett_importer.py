@@ -3,7 +3,8 @@ import math
 import random
 from everett.worldgraph import world
 from everett.worldgenerators import world_three
-from timeit import default_timer as timer
+
+from print_timer import print_timer
 
 world = None
 
@@ -14,17 +15,6 @@ node_ids_to_vert_idx = dict()
 centre_node_id_to_boundary_vert_idx_list = dict()
 
 ocean_colour = [20, 20, 80]
-
-def print_timer(func):
-    from functools import wraps
-    @wraps(func)
-    def wrapper(*args, **kw):
-        start = timer()
-        result = func(*args, **kw)
-        end = timer()
-        print("%r: %f ms" % (func.__name__, (end - start) * 1000))
-        return result
-    return wrapper
 
 @print_timer
 def generate_world():
