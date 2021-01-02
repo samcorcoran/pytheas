@@ -25,7 +25,6 @@ keys = None
 
 
 class Window(pyglet.window.Window):
-
     # Cube 3D start rotation
     xRotation = 90
     yRotation = 0
@@ -51,9 +50,9 @@ class Window(pyglet.window.Window):
         glClearColor(0, 0, 0, 1)
         glEnable(GL_DEPTH_TEST)
         self.set_up_options_ui()
-        # Using Dummy:
-        ##self.construct_world_for_drawing()
-        self.construct_dummy_world_for_drawing()
+
+        self.construct_world_for_drawing()
+        ##self.construct_dummy_world_for_drawing()
         self.set_colouring_mode(1)
 
     def set_up_options_ui(self):
@@ -67,18 +66,44 @@ class Window(pyglet.window.Window):
         num_nodes = everett_importer.construct_dummy_nodes(num_nodes, verts)
 
         print("num nodes: " + str(num_nodes))
-        self.construct_3d_world(verts, num_nodes)
-        self.construct_2d_world(verts, num_nodes)
+
+        # Replace 3d world construction with dummy version
+        self.construct_dummy_3d_world(verts, num_nodes)
+        ## DEBUG: Commented out to make debugging why wrong node id keys are being used
+        ##self.construct_2d_world(verts, num_nodes)
 
     def construct_world_for_drawing(self):
         num_nodes = 0
+        num_nodes_2d = 0
         verts = list()
+        verts_2d = list()
         num_nodes = everett_importer.construct_node_verts_with_boundary_duplicates(num_nodes, verts)
+        num_nodes_2d = everett_importer.construct_2d_node_verts_with_boundary_duplicates(num_nodes_2d, verts_2d)
         print("num nodes: " + str(num_nodes))
         self.construct_3d_world(verts, num_nodes)
-        self.construct_2d_world(verts, num_nodes)
+        self.construct_2d_world(verts_2d, num_nodes_2d)
+
+    def construct_dummy_3d_world(self, verts, num_nodes):
+        """For dummy fixed six vert 3D world, create pyglet indexed domain of vertices and colours."""
+
+        # Create equal number of colour triplets
+        vert_colours = construct_blue_colour_list(num_nodes)
+
+        # Create vertex domain defining attribute usage formats
+        indexed_domain = pyglet.graphics.vertexdomain.create_indexed_domain('v3f/static', 'c3B/dynamic')
+
+        # Add indices to vertex list
+        indices = everett_importer.construct_dummy_cell_indices()
+
+        self.indexed_vertex_list = indexed_domain.create(num_nodes, len(indices))
+        self.indexed_vertex_list.vertices = verts
+        self.indexed_vertex_list.indices = indices
+        self.indexed_vertex_list.colors = vert_colours
+
 
     def construct_3d_world(self, verts, num_nodes):
+        """For 3D rendering of everett world, create pyglet indexed domain of vertices and colours."""
+
         # Create equal number of colour triplets
         vert_colours = construct_blue_colour_list(num_nodes)
 
@@ -104,9 +129,19 @@ class Window(pyglet.window.Window):
         indices = everett_importer.construct_cell_indices()
 
         self.flat_indexed_vertex_list = indexed_domain.create(num_nodes, len(indices))
-        self.flat_indexed_vertex_list.vertices = everett_importer.convert_to_flat_verts(self.indexed_vertex_list.vertices, num_nodes)
+        for i, v in enumerate(verts):
+            if i % 3 == 1:
+                verts[i] = 0.5
+        self.flat_indexed_vertex_list.vertices = verts
+        #Debug:
+        #self.flat_indexed_vertex_list.vertices = everett_importer.convert_to_flat_verts(
+        #    self.indexed_vertex_list.vertices, num_nodes)
         self.flat_indexed_vertex_list.indices = self.indexed_vertex_list.indices
-        #self.flat_indexed_vertex_list.colors = self.indexed_vertex_list.colors
+        print(verts)
+        print(self.indexed_vertex_list.indices)
+        print()
+
+        # self.flat_indexed_vertex_list.colors = self.indexed_vertex_list.colors
         cell_colouring.update_all_cells_with_random_colours(self.flat_indexed_vertex_list)
 
     def on_draw(self):
@@ -123,7 +158,7 @@ class Window(pyglet.window.Window):
         else:
             self.flat_indexed_vertex_list.draw(pyglet.gl.GL_TRIANGLES)
         # Draw polar line
-        pyglet.graphics.draw(2, pyglet.gl.GL_LINES,('v3f', (0, 0, 1.3, 0, 0, -1.3)))
+        pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ('v3f', (0, 0, 1.3, 0, 0, -1.3)))
         glPopMatrix()
 
     def on_resize(self, width, height):
@@ -137,13 +172,15 @@ class Window(pyglet.window.Window):
         aspectRatio = width / height
         global max_scroll, max_camera_angle, default_camera_angle
         scroll = max(current_scroll_level, 0) / (scroll_levels)
-        camera_angle = narrowest_camera_angle + (widest_camera_angle - narrowest_camera_angle)*(1-(current_scroll_level/scroll_levels))
+        camera_angle = narrowest_camera_angle + (widest_camera_angle - narrowest_camera_angle) * (
+            1 - (current_scroll_level / scroll_levels))
         gluPerspective(camera_angle, aspectRatio, 1, 1000)
 
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
         # Camera translation, incorporating mouse scroll
-        camera_distance = closest_camera_distance + (furthest_camera_distance - closest_camera_distance)*(1- (current_scroll_level/scroll_levels))
+        camera_distance = closest_camera_distance + (furthest_camera_distance - closest_camera_distance) * (
+            1 - (current_scroll_level / scroll_levels))
         glTranslatef(0, 0, camera_distance)
 
     def on_text_motion(self, motion):
@@ -212,6 +249,7 @@ class Window(pyglet.window.Window):
         print("Toggled to")
         print(self.mode_is_3d)
 
+
 def main():
     global keys
     everett_importer.generate_world()
@@ -222,8 +260,10 @@ def main():
 
     pyglet.app.run()
 
+
 def exit_app():
     pyglet.app.exit()
+
 
 if __name__ == '__main__':
     main()

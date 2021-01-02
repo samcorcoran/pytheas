@@ -20,7 +20,7 @@ centre_node_id_to_boundary_vert_idx_list = dict()
 @print_timer
 def generate_world():
     global world
-    world = world_three.generate_world(seed=954, total_cells_desired=50)
+    world = world_three.generate_world(seed=954, total_cells_desired=1000)
 
 @print_timer
 def land_verts():
@@ -72,6 +72,85 @@ def construct_node_verts_with_boundary_duplicates(num_verts, verts):
             num_verts += 1
     return num_verts
 
+def construct_2d_node_verts_with_boundary_duplicates(num_verts, verts_2d):
+    """
+    Retrieve node data and map geographic data and create 2d vertex positions
+
+    Determine
+    """
+    nm = world.node_manager
+    for i, node_id in enumerate(nm.cells):
+        # Add centre node to list
+        centre_geographic_loc = nm.geographic_locs[node_id]
+        verts_2d.extend(geographic_to_2d_cartesian(centre_geographic_loc, False))
+        # Store index in vert
+        node_ids_to_vert_idx[node_id] = num_verts
+        num_verts += 1
+
+        # Determine if east or west
+        centre_is_eastern = centre_geographic_loc[0] > 0
+        # TODO: Is there a need for is_northern? Hexes that wrap over the pole should go higher than the top of the map
+
+        is_eastern_flags = []
+        print("BPs")
+        bp_geo_locs = list()
+        for bp_id in nm.get_boundary_nodes_of(node_id):
+            bp_geo_loc = nm.geographic_locs[bp_id]
+            if centre_is_eastern:
+                if bp_geo_loc[0] < -90:
+                    # This boundary point is in the western hemisphere.
+                    # Assuming centre-point to boundary point is less than 90 degrees, this cell must straddle...
+                    # the back-seam of the globe's coordinate system.
+                    # Solution: Shift western bp to east of cell centre.
+                    bp_geo_locs.append([bp_geo_loc[0] + 360, bp_geo_loc[1]])
+            else:
+                if bp_geo_loc[0] > 90:
+                    # Boundary point is in eastern hemi, while cell centre is in western
+                    # Assuming cell radius is less than 90 degrees, this cell straddles.
+                    # Solution: Shift eastern bp to west of cell centre
+                    bp_geo_locs.append([bp_geo_loc[0] - 360, bp_geo_loc[1]])
+
+        # Now add its boundary points
+        centre_node_id_to_boundary_vert_idx_list[node_id] = list()
+        for bp_id in nm.get_boundary_nodes_of(node_id):
+            bp_geographic_loc = nm.geographic_locs[bp_id]
+            verts_2d.extend(geographic_to_2d_cartesian(bp_geographic_loc, centre_is_eastern))
+
+            # Remember the id's direct mapping to verts
+            node_ids_to_vert_idx[node_id] = num_verts
+
+            # Also remember via which node was the centre
+            centre_node_id_to_boundary_vert_idx_list[node_id].append(num_verts)
+            num_verts += 1
+    return num_verts
+
+@print_timer
+def geographic_to_2d_cartesian(geo_loc, centre_is_eastern):
+    y = 0 # Fixed depth for placing the 2d map in space
+    x = geo_loc[0]
+    # # TODO: Dont' do this correction for centre nodes
+    # if centre_is_eastern:
+    #     # Correct for an 180 centre but -180 bp, by making x > 180
+    #     # -179 becomes 179
+    #     # 179 stays 179
+    #     # -1 should stay -1 # TODO THIS ISN'T HAPPENING
+    #     x = (x + 360) % 360
+    # else:
+    #     # 179 becomes -181
+    #     # -179 stays -179
+    #     x = (x - 360) % 360
+    # Scale [-180,180] to a smaller range
+    x = x / 100
+    #print("x: {} -> {}".format(geo_loc[0], x))
+
+    # North-South dimensions
+    z = geo_loc[1]
+    # Scale [-90,90] to a smaller range
+    z = z / 100
+
+    #print("{0}, {1}, {2}".format(x, y, z))
+    return [x, y, z]
+
 @print_timer
 def construct_dummy_nodes(num_verts, verts):
     """ Construct one face of a half-size cube with two triangles, for debug """
@@ -110,6 +189,10 @@ def construct_node_verts(num_verts, verts):
         node_ids_to_vert_idx[node_id] = num_verts
         num_verts += 1
     return num_verts
+
+def construct_dummy_cell_indices():
+    cell_triangle_idxs = [0, 1, 2, 3, 4, 5]
+    return cell_triangle_idxs
 
 @print_timer
 def construct_cell_indices():
