@@ -74,7 +74,8 @@ def construct_node_verts_with_boundary_duplicates(num_verts, verts):
 
 def construct_2d_node_verts_with_boundary_duplicates(num_verts, verts_2d):
     """
-    Retrieve node data and map geographic data and create 2d vertex positions
+    Retrieve node geographic data and create 2d vertex positions, adjusting to place boundary points on the same side of
+    the map as the cell's centre node.
     """
     nm = world.node_manager
     for i, node_id in enumerate(nm.cells):
@@ -101,18 +102,21 @@ def construct_2d_node_verts_with_boundary_duplicates(num_verts, verts_2d):
                     # the back-seam of the globe's coordinate system.
                     # Solution: Shift western bp to east of cell centre.
                     bp_geo_locs.append([bp_geo_loc[0] + 360, bp_geo_loc[1]])
+                else:
+                    bp_geo_locs.append(bp_geo_loc)
             else:
                 if bp_geo_loc[0] > 90:
                     # Boundary point is in eastern hemi, while cell centre is in western
                     # Assuming cell radius is less than 90 degrees, this cell straddles.
                     # Solution: Shift eastern bp to west of cell centre
                     bp_geo_locs.append([bp_geo_loc[0] - 360, bp_geo_loc[1]])
+                else:
+                    bp_geo_locs.append(bp_geo_loc)
 
         # Now add its boundary points
         centre_node_id_to_boundary_vert_idx_list[node_id] = list()
-        for bp_id in nm.get_boundary_nodes_of(node_id):
-            bp_geographic_loc = nm.geographic_locs[bp_id]
-            verts_2d.extend(geographic_to_2d_cartesian(bp_geographic_loc, centre_is_eastern))
+        for bp_geo_loc in bp_geo_locs:
+            verts_2d.extend(geographic_to_2d_cartesian(bp_geo_loc, centre_is_eastern))
 
             # Remember the id's direct mapping to verts
             node_ids_to_vert_idx[node_id] = num_verts
