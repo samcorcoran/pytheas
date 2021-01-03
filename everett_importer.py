@@ -92,12 +92,12 @@ def construct_2d_node_verts_with_boundary_duplicates(num_verts, verts_2d):
         # TODO: Is there a need for is_northern? Hexes that wrap over the pole should go higher than the top of the map
 
         is_eastern_flags = []
-        print("BPs")
         bp_geo_locs = list()
         for bp_id in nm.get_boundary_nodes_of(node_id):
             bp_geo_loc = nm.geographic_locs[bp_id]
             if centre_is_eastern:
                 if bp_geo_loc[0] < -90:
+                    # TODO: FIX THIS ASSUMPTION - it does not hold near poles, as 90 degrees covers a shorter distance and eventually is less th
                     # This boundary point is in the western hemisphere.
                     # Assuming centre-point to boundary point is less than 90 degrees, this cell must straddle...
                     # the back-seam of the globe's coordinate system.
@@ -124,31 +124,16 @@ def construct_2d_node_verts_with_boundary_duplicates(num_verts, verts_2d):
             num_verts += 1
     return num_verts
 
-@print_timer
 def geographic_to_2d_cartesian(geo_loc, centre_is_eastern):
     y = 0 # Fixed depth for placing the 2d map in space
+    # East-West dimensions
     x = geo_loc[0]
-    # # TODO: Dont' do this correction for centre nodes
-    # if centre_is_eastern:
-    #     # Correct for an 180 centre but -180 bp, by making x > 180
-    #     # -179 becomes 179
-    #     # 179 stays 179
-    #     # -1 should stay -1 # TODO THIS ISN'T HAPPENING
-    #     x = (x + 360) % 360
-    # else:
-    #     # 179 becomes -181
-    #     # -179 stays -179
-    #     x = (x - 360) % 360
     # Scale [-180,180] to a smaller range
     x = x / 100
-    #print("x: {} -> {}".format(geo_loc[0], x))
-
     # North-South dimensions
     z = geo_loc[1]
     # Scale [-90,90] to a smaller range
     z = z / 100
-
-    #print("{0}, {1}, {2}".format(x, y, z))
     return [x, y, z]
 
 @print_timer

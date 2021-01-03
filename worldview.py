@@ -137,9 +137,6 @@ class Window(pyglet.window.Window):
         #self.flat_indexed_vertex_list.vertices = everett_importer.convert_to_flat_verts(
         #    self.indexed_vertex_list.vertices, num_nodes)
         self.flat_indexed_vertex_list.indices = self.indexed_vertex_list.indices
-        print(verts)
-        print(self.indexed_vertex_list.indices)
-        print()
 
         # self.flat_indexed_vertex_list.colors = self.indexed_vertex_list.colors
         cell_colouring.update_all_cells_with_random_colours(self.flat_indexed_vertex_list)
