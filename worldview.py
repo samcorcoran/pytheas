@@ -129,9 +129,6 @@ class Window(pyglet.window.Window):
         indices = everett_importer.construct_cell_indices()
 
         self.flat_indexed_vertex_list = indexed_domain.create(num_nodes, len(indices))
-        for i, v in enumerate(verts):
-            if i % 3 == 1:
-                verts[i] = 0.5
         self.flat_indexed_vertex_list.vertices = verts
         #Debug:
         #self.flat_indexed_vertex_list.vertices = everett_importer.convert_to_flat_verts(

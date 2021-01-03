@@ -75,8 +75,6 @@ def construct_node_verts_with_boundary_duplicates(num_verts, verts):
 def construct_2d_node_verts_with_boundary_duplicates(num_verts, verts_2d):
     """
     Retrieve node data and map geographic data and create 2d vertex positions
-
-    Determine
     """
     nm = world.node_manager
     for i, node_id in enumerate(nm.cells):
