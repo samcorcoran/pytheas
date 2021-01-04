@@ -26,9 +26,9 @@ keys = None
 
 class Window(pyglet.window.Window):
     # Cube 3D start rotation
-    xRotation = 90
-    yRotation = 0
-    zRotation = 0
+    xRotation = defaultXRotation = 90
+    yRotation = defaultYRotation = 0
+    zRotation = defaultZRotation = 0
 
     # 90, 0, 0 degrees == 0N 0E lon lat
     # <90 xRot is south pole
@@ -121,31 +121,29 @@ class Window(pyglet.window.Window):
     def construct_2d_world(self, verts, num_nodes):
         if self.flat_indexed_vertex_list is not None:
             return
-
         # Create vertex domain defining attribute usage formats
         indexed_domain = pyglet.graphics.vertexdomain.create_indexed_domain('v3f/static', 'c3B/dynamic')
-
         # Add indices to vertex list
         indices = everett_importer.construct_cell_indices()
-
         self.flat_indexed_vertex_list = indexed_domain.create(num_nodes, len(indices))
         self.flat_indexed_vertex_list.vertices = verts
-        #Debug:
-        #self.flat_indexed_vertex_list.vertices = everett_importer.convert_to_flat_verts(
-        #    self.indexed_vertex_list.vertices, num_nodes)
         self.flat_indexed_vertex_list.indices = self.indexed_vertex_list.indices
-
-        # self.flat_indexed_vertex_list.colors = self.indexed_vertex_list.colors
-        cell_colouring.update_all_cells_with_random_colours(self.flat_indexed_vertex_list)
+        self.flat_indexed_vertex_list.colors = self.indexed_vertex_list.colors
 
     def on_draw(self):
         # Clear the current GL Window
         self.clear()
         # Push Matrix onto stack
         glPushMatrix()
-        glRotatef(self.xRotation, 1, 0, 0)
-        glRotatef(self.yRotation, 0, 1, 0)
-        glRotatef(self.zRotation, 0, 0, 1)
+        if self.mode_is_3d:
+            glRotatef(self.xRotation, 1, 0, 0)
+            glRotatef(self.yRotation, 0, 1, 0)
+            glRotatef(self.zRotation, 0, 0, 1)
+        else:
+            glRotatef(self.defaultXRotation, 1, 0, 0)
+            glRotatef(self.defaultYRotation, 0, 1, 0)
+            glRotatef(self.defaultZRotation, 0, 0, 1)
+
         # Draw coloured triangles to form cells
         if self.mode_is_3d:
             self.indexed_vertex_list.draw(pyglet.gl.GL_TRIANGLES)
@@ -179,14 +177,15 @@ class Window(pyglet.window.Window):
 
     def on_text_motion(self, motion):
         global keys
-        if keys[key.UP]:
-            self.xRotation -= rotation_increment
-        if keys[key.DOWN]:
-            self.xRotation += rotation_increment
-        if keys[key.LEFT]:
-            self.zRotation += rotation_increment
-        if keys[key.RIGHT]:
-            self.zRotation -= rotation_increment
+        if self.mode_is_3d:
+            if keys[key.UP]:
+                self.xRotation -= rotation_increment
+            if keys[key.DOWN]:
+                self.xRotation += rotation_increment
+            if keys[key.LEFT]:
+                self.zRotation += rotation_increment
+            if keys[key.RIGHT]:
+                self.zRotation -= rotation_increment
 
     def on_key_press(self, symbol, modifiers):
         if symbol == key._1:
@@ -213,9 +212,11 @@ class Window(pyglet.window.Window):
     def set_colouring_mode(self, new_render_mode):
         self.colouring_mode = new_render_mode
         # Recolour world
-        cell_colouring.update_all_cells_to_ocean(self.indexed_vertex_list)
         print("%s%d%s %s" % ("Mode ", new_render_mode, ".", self.numbered_options[new_render_mode][0]))
         self.numbered_options[new_render_mode][1](self.indexed_vertex_list)
+        # Update 2D vertices with same colours
+        self.flat_indexed_vertex_list.colors = self.indexed_vertex_list.colors
+
 
     def on_mouse_scroll(self, x, y, scroll_x, scroll_y):
         global current_scroll_level
@@ -240,9 +241,6 @@ class Window(pyglet.window.Window):
 
     def toggle_2d_3d_mode(self, indexed_vertex_list):
         self.mode_is_3d = not self.mode_is_3d
-        print("Toggled to")
-        print(self.mode_is_3d)
-
 
 def main():
     global keys
