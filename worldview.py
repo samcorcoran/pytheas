@@ -69,8 +69,6 @@ class Window(pyglet.window.Window):
 
         # Replace 3d world construction with dummy version
         self.construct_dummy_3d_world(verts, num_nodes)
-        ## DEBUG: Commented out to make debugging why wrong node id keys are being used
-        ##self.construct_2d_world(verts, num_nodes)
 
     def construct_world_for_drawing(self):
         num_nodes = 0
@@ -78,7 +76,7 @@ class Window(pyglet.window.Window):
         verts = list()
         verts_2d = list()
         num_nodes = everett_importer.construct_node_verts_with_boundary_duplicates(num_nodes, verts)
-        num_nodes_2d = everett_importer.construct_2d_node_verts_with_boundary_duplicates(num_nodes_2d, verts_2d)
+        num_nodes_2d = everett_importer.construct_2d_node_verts_with_boundary_duplicates(num_nodes_2d, verts_2d, self.zRotation-self.defaultZRotation)
         print("num nodes: " + str(num_nodes))
         self.construct_3d_world(verts, num_nodes)
         self.construct_2d_world(verts_2d, num_nodes_2d)
@@ -118,17 +116,26 @@ class Window(pyglet.window.Window):
         self.indexed_vertex_list.indices = indices
         self.indexed_vertex_list.colors = vert_colours
 
-    def construct_2d_world(self, verts, num_nodes):
+    def construct_2d_world(self, verts_2d, num_nodes_2d):
         if self.flat_indexed_vertex_list is not None:
             return
         # Create vertex domain defining attribute usage formats
         indexed_domain = pyglet.graphics.vertexdomain.create_indexed_domain('v3f/static', 'c3B/dynamic')
         # Add indices to vertex list
         indices = everett_importer.construct_cell_indices()
-        self.flat_indexed_vertex_list = indexed_domain.create(num_nodes, len(indices))
-        self.flat_indexed_vertex_list.vertices = verts
+        self.flat_indexed_vertex_list = indexed_domain.create(num_nodes_2d, len(indices))
+        self.flat_indexed_vertex_list.vertices = verts_2d
         self.flat_indexed_vertex_list.indices = self.indexed_vertex_list.indices
         self.flat_indexed_vertex_list.colors = self.indexed_vertex_list.colors
+
+    def reconstruct_2d_world(self):
+        # Rebuild vertex information based on new 2d positions for cells (e.g. if wrapping at back of globe has changed)
+        num_nodes_2d = 0
+        verts_2d = list()
+        everett_importer.construct_2d_node_verts_with_boundary_duplicates(num_nodes_2d, verts_2d, self.zRotation-self.defaultZRotation)
+        # Populate vertex list with vertex information
+        self.flat_indexed_vertex_list.vertices = verts_2d
+        self.flat_indexed_vertex_list.indices = self.indexed_vertex_list.indices
 
     def on_draw(self):
         # Clear the current GL Window
@@ -254,6 +261,9 @@ class Window(pyglet.window.Window):
 
     def toggle_2d_3d_mode(self, indexed_vertex_list):
         self.mode_is_3d = not self.mode_is_3d
+        if not self.mode_is_3d:
+            self.reconstruct_2d_world()
+
 
 def main():
     global keys
