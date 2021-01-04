@@ -186,6 +186,19 @@ class Window(pyglet.window.Window):
                 self.zRotation += rotation_increment
             if keys[key.RIGHT]:
                 self.zRotation -= rotation_increment
+        self.clamp_rotations()
+
+    def clamp_rotations(self):
+        """
+        Called after rotation updates, to keep rotation values within controlled range.
+        """
+        # Clamp longitudinal (Z) rotation to valid longitudes
+        if self.zRotation < -180:
+            self.zRotation = self.zRotation + 360
+        if self.zRotation > 180:
+            self.zRotation = self.zRotation - 360
+        self.xRotation = self.xRotation % 360
+        self.yRotation = self.yRotation % 360
 
     def on_key_press(self, symbol, modifiers):
         if symbol == key._1:
