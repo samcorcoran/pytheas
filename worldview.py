@@ -202,7 +202,7 @@ class Window(pyglet.window.Window):
         Called after rotation updates, to keep rotation values within controlled range.
         """
         # Clamp longitudinal (Z) rotation to valid longitudes
-        if self.zRotation < -180:
+        if self.zRotation <= -180:
             self.zRotation = self.zRotation + 360
         if self.zRotation > 180:
             self.zRotation = self.zRotation - 360
