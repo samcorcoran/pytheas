@@ -155,6 +155,7 @@ class Window(pyglet.window.Window):
         if self.mode_is_3d:
             self.indexed_vertex_list.draw(pyglet.gl.GL_TRIANGLES)
         else:
+            self.reconstruct_2d_world()
             self.flat_indexed_vertex_list.draw(pyglet.gl.GL_TRIANGLES)
         # Draw polar line
         pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ('v3f', (0, 0, 1.3, 0, 0, -1.3)))
@@ -184,7 +185,8 @@ class Window(pyglet.window.Window):
 
     def on_text_motion(self, motion):
         global keys
-        if self.mode_is_3d:
+        # TODO: Remove this true, so rotation only works on 3d mode
+        if True or self.mode_is_3d:
             if keys[key.UP]:
                 self.xRotation -= rotation_increment
             if keys[key.DOWN]:
