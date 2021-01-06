@@ -72,6 +72,7 @@ def construct_node_verts_with_boundary_duplicates(num_verts, verts):
             num_verts += 1
     return num_verts
 
+@print_timer
 def construct_2d_node_verts_with_boundary_duplicates(num_verts_2d, verts_2d, longitude_offset_for_rotation):
     """
     Retrieve node geographic data and create 2d vertex positions, adjusting to place boundary points on the same side of

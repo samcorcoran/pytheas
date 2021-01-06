@@ -23,7 +23,6 @@ narrowest_camera_angle = 10
 
 keys = None
 
-
 class Window(pyglet.window.Window):
     # Cube 3D start rotation
     xRotation = defaultXRotation = 90
@@ -44,6 +43,7 @@ class Window(pyglet.window.Window):
     colouring_mode = 0
     numbered_options = None
     mode_is_3d = True
+    dirty_verts = False
 
     def __init__(self, width, height, title=''):
         super(Window, self).__init__(width, height, title)
@@ -138,6 +138,7 @@ class Window(pyglet.window.Window):
         self.flat_indexed_vertex_list.indices = self.indexed_vertex_list.indices
 
     def on_draw(self):
+        # TODO: Find out why this is being called twice on every key press (dirty_verts is being used as a mitigation)
         # Clear the current GL Window
         self.clear()
         # Push Matrix onto stack
@@ -153,11 +154,15 @@ class Window(pyglet.window.Window):
             glRotatef(self.defaultYRotation, 0, 1, 0)
             glRotatef(self.defaultZRotation, 0, 0, 1)
 
+        if self.dirty_verts:
+            if not self.mode_is_3d:
+                self.reconstruct_2d_world()
+                self.dirty_verts = False
+
         # Draw coloured triangles to form cells
         if self.mode_is_3d:
             self.indexed_vertex_list.draw(pyglet.gl.GL_TRIANGLES)
         else:
-            self.reconstruct_2d_world()
             self.flat_indexed_vertex_list.draw(pyglet.gl.GL_TRIANGLES)
         # Draw polar line
         pyglet.graphics.draw(2, pyglet.gl.GL_LINES, ('v3f', (0, 0, 1.3, 0, 0, -1.3)))
@@ -198,6 +203,7 @@ class Window(pyglet.window.Window):
             if keys[key.RIGHT]:
                 self.zRotation -= rotation_increment
         self.clamp_rotations()
+        self.dirty_verts = True
 
     def clamp_rotations(self):
         """
@@ -265,9 +271,6 @@ class Window(pyglet.window.Window):
 
     def toggle_2d_3d_mode(self, indexed_vertex_list):
         self.mode_is_3d = not self.mode_is_3d
-        if not self.mode_is_3d:
-            self.reconstruct_2d_world()
-
 
 def main():
     global keys
