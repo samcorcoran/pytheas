@@ -143,9 +143,11 @@ class Window(pyglet.window.Window):
         # Push Matrix onto stack
         glPushMatrix()
         if self.mode_is_3d:
+            # TODO: Remove this magic number by positioning the camera differently? Also, fix that warping...
+            z_rotation_to_make_3d_and_2d_match = 90
             glRotatef(self.xRotation, 1, 0, 0)
             glRotatef(self.yRotation, 0, 1, 0)
-            glRotatef(self.zRotation, 0, 0, 1)
+            glRotatef(self.zRotation+z_rotation_to_make_3d_and_2d_match, 0, 0, 1)
         else:
             glRotatef(self.defaultXRotation, 1, 0, 0)
             glRotatef(self.defaultYRotation, 0, 1, 0)
