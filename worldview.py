@@ -40,6 +40,7 @@ class Window(pyglet.window.Window):
     indexed_domain = None
     indexed_vertex_list = None
     flat_indexed_vertex_list = None
+    paths_3d_vertex_list = None
     colouring_mode = 0
     numbered_options = None
     mode_is_3d = True
@@ -52,55 +53,18 @@ class Window(pyglet.window.Window):
         self.set_up_options_ui()
 
         self.construct_world_for_drawing()
-        ##self.construct_dummy_world_for_drawing()
         self.set_colouring_mode(1)
 
     def set_up_options_ui(self):
         self.set_numbered_options()
 
-    def construct_dummy_world_for_drawing(self):
-        num_nodes = 0
-        verts = list()
-
-        # USING DUMMY:
-        num_nodes = everett_importer.construct_dummy_nodes(num_nodes, verts)
-
-        print("num nodes: " + str(num_nodes))
-
-        # Replace 3d world construction with dummy version
-        self.construct_dummy_3d_world(verts, num_nodes)
-
     def construct_world_for_drawing(self):
-        num_nodes = 0
-        num_nodes_2d = 0
-        verts = list()
-        verts_2d = list()
-        num_nodes = everett_importer.construct_node_verts_with_boundary_duplicates(num_nodes, verts)
-        num_nodes_2d = everett_importer.construct_2d_node_verts_with_boundary_duplicates(num_nodes_2d, verts_2d, self.zRotation-self.defaultZRotation)
-        print("num nodes: " + str(num_nodes))
-        self.construct_3d_world(verts, num_nodes)
-        self.construct_2d_world(verts_2d, num_nodes_2d)
+        self.construct_3d_world()
+        self.construct_2d_world()
 
-    def construct_dummy_3d_world(self, verts, num_nodes):
-        """For dummy fixed six vert 3D world, create pyglet indexed domain of vertices and colours."""
-
-        # Create equal number of colour triplets
-        vert_colours = construct_blue_colour_list(num_nodes)
-
-        # Create vertex domain defining attribute usage formats
-        indexed_domain = pyglet.graphics.vertexdomain.create_indexed_domain('v3f/static', 'c3B/dynamic')
-
-        # Add indices to vertex list
-        indices = everett_importer.construct_dummy_cell_indices()
-
-        self.indexed_vertex_list = indexed_domain.create(num_nodes, len(indices))
-        self.indexed_vertex_list.vertices = verts
-        self.indexed_vertex_list.indices = indices
-        self.indexed_vertex_list.colors = vert_colours
-
-
-    def construct_3d_world(self, verts, num_nodes):
+    def construct_3d_world(self):
         """For 3D rendering of everett world, create pyglet indexed domain of vertices and colours."""
+        verts, num_nodes = everett_importer.construct_node_verts_with_boundary_duplicates()
 
         # Create equal number of colour triplets
         vert_colours = construct_blue_colour_list(num_nodes)
@@ -116,7 +80,17 @@ class Window(pyglet.window.Window):
         self.indexed_vertex_list.indices = indices
         self.indexed_vertex_list.colors = vert_colours
 
-    def construct_2d_world(self, verts_2d, num_nodes_2d):
+        path_indexed_domain = pyglet.graphics.vertexdomain.create_indexed_domain('v3f/static', 'c3B/dynamic')
+        path_indices, path_vert_colours = everett_importer.construct_3d_paths()
+        self.paths_3d_vertex_list = path_indexed_domain.create(num_nodes, len(path_indices))
+        self.paths_3d_vertex_list.vertices = verts
+        self.paths_3d_vertex_list.indices = indices
+        self.paths_3d_vertex_list.colors = path_vert_colours
+
+    def construct_2d_world(self):
+        # Generate verts
+        verts_2d, num_nodes_2d = everett_importer.construct_2d_node_verts_with_boundary_duplicates(self.zRotation-self.defaultZRotation)
+
         if self.flat_indexed_vertex_list is not None:
             return
         # Create vertex domain defining attribute usage formats

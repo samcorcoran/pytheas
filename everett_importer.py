@@ -20,7 +20,7 @@ centre_node_id_to_boundary_vert_idx_list = dict()
 @print_timer
 def generate_world():
     global world
-    world = world_three.generate_world(seed=954, total_cells_desired=10000)
+    world = world_three.generate_world(seed=954, total_cells_desired=100)
 
 @print_timer
 def land_verts():
@@ -52,9 +52,11 @@ def construct_worldgraph_verts(worldgraph_vertex_list):
     worldgraph_vertex_list.colors[:] = colours
 
 @print_timer
-def construct_node_verts_with_boundary_duplicates(num_verts, verts):
+def construct_node_verts_with_boundary_duplicates():
     """ Populate verts and node-id-to-index mapping in centre_node_id_to_boundary_vert_idx_list """
     nm = world.node_manager
+    verts = list()
+    num_verts = 0
     for i, node_id in enumerate(nm.cells):
         # Add centre node to list
         verts.extend(nm.cartesian_locs[node_id])
@@ -70,10 +72,10 @@ def construct_node_verts_with_boundary_duplicates(num_verts, verts):
             # Also remember via which node was the centre
             centre_node_id_to_boundary_vert_idx_list[node_id].append(num_verts)
             num_verts += 1
-    return num_verts
+    return verts, num_verts
 
 @print_timer
-def construct_2d_node_verts_with_boundary_duplicates(num_verts_2d, verts_2d, longitude_offset_for_rotation):
+def construct_2d_node_verts_with_boundary_duplicates(verts_2d, longitude_offset_for_rotation):
     """
     Retrieve node geographic data and create 2d vertex positions, adjusting to place boundary points on the same side of
     the map as the cell's centre node.
@@ -84,6 +86,8 @@ def construct_2d_node_verts_with_boundary_duplicates(num_verts_2d, verts_2d, lon
     longitudeOffset: Degrees globe is rotated around z axis (globe's North South polar axis) from its default position
     """
     nm = world.node_manager
+    verts_2d = list()
+    num_verts_2d = 0
     for i, node_id in enumerate(nm.cells):
         # Add centre node to list
         centre_geographic_loc = nm.geographic_locs[node_id]
@@ -112,7 +116,7 @@ def construct_2d_node_verts_with_boundary_duplicates(num_verts_2d, verts_2d, lon
             # Also remember via which node was the centre
             centre_node_id_to_boundary_vert_idx_list[node_id].append(num_verts_2d)
             num_verts_2d += 1
-    return num_verts_2d
+    return verts_2d, num_verts_2d
 
 def clamp_to_longitude_range(lon):
     if lon <= -180:
@@ -210,6 +214,18 @@ def construct_cell_indices():
             cell_triangle_idxs.append(boundary_node_indices[i-1])
             cell_triangle_idxs.append(boundary_node_indices[i])
     return cell_triangle_idxs
+
+def construct_3d_paths():
+    path_verts = list()
+    path_vert_colours = list()
+
+    # Iterate over rivers, adding vert pairs for each segment
+    nm = world.node_manager
+    for river in nm.rivers:
+       for r in river.sequence_of_locs:
+           print(r)
+
+    return path_verts, path_vert_colours
 
 def construct_blue_colour_list(num_verts):
     return cell_colouring.ocean_colour * num_verts
