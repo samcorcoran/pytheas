@@ -236,7 +236,7 @@ class Window(pyglet.window.Window):
         self.numbered_options[2] = ['Altitude colouring', cell_colouring.update_land_cells_with_altitude_colours]
         self.numbered_options[3] = ['Whittaker colouring', cell_colouring.update_land_cells_with_whittaker_colours]
         self.numbered_options[4] = ['Temperature colouring', cell_colouring.update_cells_with_temperature_colours]
-        self.numbered_options[5] = ['', print("Option 5 not set.")]
+        self.numbered_options[5] = ['Toggle 2D/3D', self.toggle_2d_3d_mode]
         self.numbered_options[6] = ['', print("Option 6 not set.")]
         self.numbered_options[7] = ['', print("Option 7 not set.")]
         self.numbered_options[8] = ['', print("Option 8 not set.")]
