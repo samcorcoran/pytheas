@@ -64,10 +64,10 @@ class Window(pyglet.window.Window):
 
     def construct_3d_world(self):
         """For 3D rendering of everett world, create pyglet indexed domain of vertices and colours."""
-        verts, num_nodes = everett_importer.construct_node_verts_with_boundary_duplicates()
+        verts, num_verts = everett_importer.construct_node_verts_with_boundary_duplicates()
 
         # Create equal number of colour triplets
-        vert_colours = construct_blue_colour_list(num_nodes)
+        vert_colours = construct_blue_colour_list(num_verts)
 
         # Create vertex domain defining attribute usage formats
         indexed_domain = pyglet.graphics.vertexdomain.create_indexed_domain('v3f/static', 'c3B/dynamic')
@@ -75,16 +75,17 @@ class Window(pyglet.window.Window):
         # Add indices to vertex list
         indices = everett_importer.construct_cell_indices()
 
-        self.indexed_vertex_list = indexed_domain.create(num_nodes, len(indices))
+        self.indexed_vertex_list = indexed_domain.create(num_verts, len(indices))
         self.indexed_vertex_list.vertices = verts
         self.indexed_vertex_list.indices = indices
         self.indexed_vertex_list.colors = vert_colours
 
+        # Paths, for rivers etc
+        path_verts, path_num_verts, path_indices, path_vert_colours = everett_importer.construct_3d_paths()
         path_indexed_domain = pyglet.graphics.vertexdomain.create_indexed_domain('v3f/static', 'c3B/dynamic')
-        path_indices, path_vert_colours = everett_importer.construct_3d_paths()
-        self.paths_3d_vertex_list = path_indexed_domain.create(num_nodes, len(path_indices))
-        self.paths_3d_vertex_list.vertices = verts
-        self.paths_3d_vertex_list.indices = indices
+        self.paths_3d_vertex_list = path_indexed_domain.create(path_num_verts, len(path_indices))
+        self.paths_3d_vertex_list.vertices = path_verts
+        self.paths_3d_vertex_list.indices = path_indices
         self.paths_3d_vertex_list.colors = path_vert_colours
 
     def construct_2d_world(self):
@@ -105,8 +106,7 @@ class Window(pyglet.window.Window):
     def reconstruct_2d_world(self):
         # Rebuild vertex information based on new 2d positions for cells (e.g. if wrapping at back of globe has changed)
         num_nodes_2d = 0
-        verts_2d = list()
-        everett_importer.construct_2d_node_verts_with_boundary_duplicates(num_nodes_2d, verts_2d, self.zRotation-self.defaultZRotation)
+        verts_2d, num_verts_2d = everett_importer.construct_2d_node_verts_with_boundary_duplicates(self.zRotation-self.defaultZRotation)
         # Populate vertex list with vertex information
         self.flat_indexed_vertex_list.vertices = verts_2d
         self.flat_indexed_vertex_list.indices = self.indexed_vertex_list.indices

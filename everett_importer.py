@@ -1,6 +1,7 @@
 from pyglet.gl import *
 from everett.worldgraph import world
 from everett.worldgenerators import world_three
+from everett.spherepoints.cartesian_utils import geographic_location_to_cartesian_point
 
 import cell_colouring
 from print_timer import print_timer
@@ -20,7 +21,7 @@ centre_node_id_to_boundary_vert_idx_list = dict()
 @print_timer
 def generate_world():
     global world
-    world = world_three.generate_world(seed=954, total_cells_desired=100)
+    world = world_three.generate_world(seed=954, total_cells_desired=1000)
 
 @print_timer
 def land_verts():
@@ -75,7 +76,7 @@ def construct_node_verts_with_boundary_duplicates():
     return verts, num_verts
 
 @print_timer
-def construct_2d_node_verts_with_boundary_duplicates(verts_2d, longitude_offset_for_rotation):
+def construct_2d_node_verts_with_boundary_duplicates(longitude_offset_for_rotation):
     """
     Retrieve node geographic data and create 2d vertex positions, adjusting to place boundary points on the same side of
     the map as the cell's centre node.
@@ -94,7 +95,7 @@ def construct_2d_node_verts_with_boundary_duplicates(verts_2d, longitude_offset_
         # Apply rotational offset to longitude value
         centre_lon = clamp_to_longitude_range(centre_geographic_loc[0] + longitude_offset_for_rotation)
         centre_geographic_loc = [centre_lon, centre_geographic_loc[1]]
-        verts_2d.extend(geographic_to_2d_cartesian(centre_geographic_loc, False, None, longitude_offset_for_rotation))
+        verts_2d.extend(geographic_to_2d_cartesian(centre_geographic_loc, False, None))
         # Store index in vert
         node_ids_to_vert_idx[node_id] = num_verts_2d
         num_verts_2d += 1
@@ -108,7 +109,7 @@ def construct_2d_node_verts_with_boundary_duplicates(verts_2d, longitude_offset_
         for bp_id in nm.get_boundary_nodes_of(node_id):
             bp_lon, bp_lat = nm.geographic_locs[bp_id]
             bp_lon += longitude_offset_for_rotation
-            verts_2d.extend(geographic_to_2d_cartesian([bp_lon, bp_lat], is_boundary_point=True, centre_is_eastern=centre_is_eastern, longitude_offset_for_rotation=longitude_offset_for_rotation))
+            verts_2d.extend(geographic_to_2d_cartesian([bp_lon, bp_lat], is_boundary_point=True, centre_is_eastern=centre_is_eastern))
 
             # Remember the id's direct mapping to verts
             node_ids_to_vert_idx[node_id] = num_verts_2d
@@ -125,7 +126,8 @@ def clamp_to_longitude_range(lon):
         lon = (lon % 360) - 360
     return lon
 
-def geographic_to_2d_cartesian(geo_loc, is_boundary_point, centre_is_eastern, longitude_offset_for_rotation):
+# TODO: Rename this to something less generic and more specific to cell centre and boundary locations
+def geographic_to_2d_cartesian(geo_loc, is_boundary_point, centre_is_eastern):
     y = 0 # Fixed depth for placing the 2d map in space
     # East-West dimensions
     x = geo_loc[0]
@@ -158,28 +160,6 @@ def geographic_to_2d_cartesian(geo_loc, is_boundary_point, centre_is_eastern, lo
     return [x, y, z]
 
 @print_timer
-def construct_dummy_nodes(num_verts, verts):
-    """ Construct one face of a half-size cube with two triangles, for debug """
-    x1 = [-0.5, -0.5, 0]
-    x2 = [0.5, -0.5, 0]
-    x3 = [-0.5, 0.5, 0]
-    x4 = [0.5, 0.5, 0]
-    verts.extend(x1)
-    verts.extend(x2)
-    verts.extend(x3)
-    verts.extend(x2)
-    verts.extend(x3)
-    verts.extend(x4)
-    num_verts = 6
-    node_ids_to_vert_idx[1] = 0
-    node_ids_to_vert_idx[2] = 1
-    node_ids_to_vert_idx[3] = 2
-    node_ids_to_vert_idx[4] = 1
-    node_ids_to_vert_idx[5] = 2
-    node_ids_to_vert_idx[6] = 3
-    return num_verts
-
-@print_timer
 def construct_node_verts(num_verts, verts):
     nm = world.node_manager
     for i, node_id in enumerate(nm.cells):
@@ -195,10 +175,6 @@ def construct_node_verts(num_verts, verts):
         node_ids_to_vert_idx[node_id] = num_verts
         num_verts += 1
     return num_verts
-
-def construct_dummy_cell_indices():
-    cell_triangle_idxs = [0, 1, 2, 3, 4, 5]
-    return cell_triangle_idxs
 
 @print_timer
 def construct_cell_indices():
@@ -217,15 +193,21 @@ def construct_cell_indices():
 
 def construct_3d_paths():
     path_verts = list()
-    path_vert_colours = list()
+    path_num_verts = 0
+    path_indices = list()
 
     # Iterate over rivers, adding vert pairs for each segment
     nm = world.node_manager
     for river in nm.rivers:
-       for r in river.sequence_of_locs:
-           print(r)
-
-    return path_verts, path_vert_colours
+        for i, river_loc in enumerate(river.sequence_of_locs):
+            path_verts.extend(geographic_location_to_cartesian_point(river_loc))
+            path_num_verts += 1
+            path_indices.append(path_num_verts)
+            # Double-add mid-river verts to serve as end and start of successive river segments
+            if i != 0 and i != len(river.sequence_of_locs)-1:
+                path_indices.append(path_num_verts)
+    path_vert_colours = cell_colouring.ocean_colour * path_num_verts
+    return path_verts, path_num_verts, path_indices, path_vert_colours
 
 def construct_blue_colour_list(num_verts):
     return cell_colouring.ocean_colour * num_verts
@@ -235,108 +217,3 @@ def construct_random_colour_list(num_verts):
     for n in range(num_verts):
         vert_colours.extend(cell_colouring.random_c3B_colour())
     return vert_colours
-
-def convert_to_flat_verts(verts, num_verts):
-    nm = world.node_manager
-    print("lengths")
-    print(len(verts))
-    print(num_verts)
-    flat_verts = [0.0, 0.0, 0.0] * num_verts
-
-    #for x in range(len(verts)):
-        #flat_verts[x] = verts[x]
-
-    temp_populate_flat_verts(flat_verts)
-    ###temp_populate_flat_verts_for_dummy(flat_verts)
-
-    return flat_verts
-
-def temp_populate_flat_verts(flat_verts):
-    nm = world.node_manager
-    for centre_node_id in nm.cells:
-        # Update position for centre node verts
-        centre_vertex_idx = node_ids_to_vert_idx[centre_node_id]
-        #print("CENTRE")
-        #print("{0}, {1}, {2}".format(flat_verts[centre_vertex_idx], flat_verts[centre_vertex_idx+1], flat_verts[centre_vertex_idx+2]))
-        flat_verts[centre_vertex_idx] = 1
-        flat_verts[centre_vertex_idx+1] = -1
-        flat_verts[centre_vertex_idx+2] = 0
-        # Update positions for boundary node verts
-        boundary_node_vert_idx_list = centre_node_id_to_boundary_vert_idx_list[centre_node_id]
-        for i, boundary_node_id in enumerate(nm.get_boundary_nodes_of(centre_node_id)):
-            b_vertex_index = boundary_node_vert_idx_list[i]
-            flat_verts[b_vertex_index] = 1
-            flat_verts[b_vertex_index+1] = -1
-            flat_verts[b_vertex_index+2] = 0
-
-def temp_populate_flat_verts_for_dummy(flat_verts):
-    nm = world.node_manager
-    for i in range(0, len(flat_verts), 3):
-        if i % 3 == 0:
-            flat_verts[i] = 1
-            flat_verts[i+1] = -1
-            flat_verts[i+2] = 0
-        elif i % 3 == 1:
-            flat_verts[i] = -1
-            flat_verts[i+1] = 1
-            flat_verts[i+2] = 0
-        elif i % 3 == 2:
-            flat_verts[i] = 1
-            flat_verts[i+1] = 1
-            flat_verts[i+2] = 0
-
-def convert_to_flat_verts2(verts):
-    # Get each cell's lonlat converted to xyz
-    # Use cells id to get boundary ids
-    # Use boundary ids to get lonlat converted to xyz
-    nm = world.node_manager
-    flat_verts = list(verts)
-    j=0
-    for centre_node_id in centre_node_id_to_boundary_vert_idx_list.keys():
-        centre_vertex_idx = node_ids_to_vert_idx[centre_node_id]
-        # Get centre lon/lat
-        centre_lon = nm.get_longitude(centre_node_id)
-        centre_lat = nm.get_latitude(centre_node_id)
-        # Convert to 2d
-        y = centre_lat / 90.0
-        x = centre_lon / 180.0
-        ##print("{0}, {1} becomes {2}. {3}, {4}".format(centre_lon, centre_lat, x, y, 0))
-        # Update vertex information for id
-
-        if j == 0:
-            flat_verts[centre_vertex_idx] = x
-            flat_verts[centre_vertex_idx+1] = y
-            flat_verts[centre_vertex_idx+2] = 1
-        else:
-            flat_verts[centre_vertex_idx] = 0
-            flat_verts[centre_vertex_idx+1] = 0
-            flat_verts[centre_vertex_idx+2] = 0
-        boundary_node_vert_idx_list = centre_node_id_to_boundary_vert_idx_list[centre_node_id]
-        for i, boundary_node_id in enumerate(nm.get_boundary_nodes_of(centre_node_id)):
-            if j == 0:
-                ##print("Boundary node id: {0}".format(boundary_node_id))
-                pass
-
-            b_lon = nm.get_longitude(boundary_node_id)
-            b_lat = nm.get_latitude(boundary_node_id)
-            b_y = b_lat / 90.0
-            b_x = b_lon / 180.0
-            ##print("{0}, {1} becomes {2}. {3}, {4}".format(b_lon, b_lat, b_x, b_y, 0))
-            #if b_x < 0 and x > 0:
-            #    b_x += 1
-            #elif b_x > 0 and x < 0:
-            #    b_x -= 1
-            b_vert_idx = boundary_node_vert_idx_list[i]
-
-            # First cell, first 66 boundary ids i < 66
-            if j == 0:
-                flat_verts[b_vert_idx] = b_x
-                flat_verts[b_vert_idx+1] = b_y
-                flat_verts[b_vert_idx+2] = 0
-            else:
-                flat_verts[centre_vertex_idx] = 0
-                flat_verts[centre_vertex_idx+1] = 0
-                flat_verts[centre_vertex_idx+2] = 0
-        j += 1
-
-    return flat_verts
