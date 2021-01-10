@@ -4,6 +4,7 @@ import everett_importer
 from print_timer import print_timer
 
 ocean_colour = [20, 20, 80]
+river_colour = ocean_colour
 land_colour = [70, 160, 20]
 
 def debug_colour_generator(num_colours):

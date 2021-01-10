@@ -2,6 +2,8 @@ from pyglet.gl import *
 from everett.worldgraph import world
 from everett.worldgenerators import world_three
 from everett.spherepoints.cartesian_utils import geographic_location_to_cartesian_point
+from everett.spherepoints.geographic_utils import Location
+
 
 import cell_colouring
 from print_timer import print_timer
@@ -21,7 +23,7 @@ centre_node_id_to_boundary_vert_idx_list = dict()
 @print_timer
 def generate_world():
     global world
-    world = world_three.generate_world(seed=954, total_cells_desired=1000)
+    world = world_three.generate_world(seed=954, total_cells_desired=100)
 
 @print_timer
 def land_verts():
@@ -185,29 +187,153 @@ def construct_cell_indices():
         # Convert everett node_ids to pytheas rendering indices
         boundary_node_indices = centre_node_id_to_boundary_vert_idx_list[cell_id]
         # Add a triplet of indices for each triangle segment (i.e. per boundary point)
-        for i in range(len(boundary_node_indices)):
+        for j in range(len(boundary_node_indices)):
             cell_triangle_idxs.append(cell_centre_vert_idx)
-            cell_triangle_idxs.append(boundary_node_indices[i-1])
-            cell_triangle_idxs.append(boundary_node_indices[i])
+            cell_triangle_idxs.append(boundary_node_indices[j-1])
+            cell_triangle_idxs.append(boundary_node_indices[j])
     return cell_triangle_idxs
 
 def construct_3d_paths():
     path_verts = list()
     path_num_verts = 0
     path_indices = list()
+    path_vert_colours = list()
 
+    # Test origin start
+    path_verts.extend([0, 0, 0])
+    path_num_verts += 1
+    path_indices.append(path_num_verts)
+    path_vert_colours.extend([0, 255, 0])
+
+    #path_num_verts = construct_river_paths(path_verts, path_num_verts, path_indices, path_vert_colours)
+    path_num_verts = construct_cell_boundary_paths(path_verts, path_num_verts, path_indices, path_vert_colours)
+    #path_num_verts = construct_dummy_paths(path_verts, path_num_verts, path_indices, path_vert_colours)
+    #path_num_verts = construct_dummy_linestrip_paths(path_verts, path_num_verts, path_indices, path_vert_colours)
+
+    print("Final indices and verts")
+    print(path_indices)
+    print(path_verts)
+
+    return path_verts, path_num_verts, path_indices, path_vert_colours
+
+def construct_river_paths(path_verts, path_num_verts, path_indices, path_vert_colours):
     # Iterate over rivers, adding vert pairs for each segment
     nm = world.node_manager
+    num_river_verts = 0
     for river in nm.rivers:
         for i, river_loc in enumerate(river.sequence_of_locs):
             path_verts.extend(geographic_location_to_cartesian_point(river_loc))
             path_num_verts += 1
+            num_river_verts += 1
             path_indices.append(path_num_verts)
             # Double-add mid-river verts to serve as end and start of successive river segments
             if i != 0 and i != len(river.sequence_of_locs)-1:
                 path_indices.append(path_num_verts)
-    path_vert_colours = cell_colouring.ocean_colour * path_num_verts
-    return path_verts, path_num_verts, path_indices, path_vert_colours
+    path_vert_colours.extend(cell_colouring.river_colour * num_river_verts)
+    return path_num_verts
+
+def construct_dummy_paths(path_verts, path_num_verts, path_indices, path_vert_colours):
+    # Add a point at the origin to fix strange issue where an origin vertex seems to exist by default
+    # path_verts.extend([0, 0, 0])
+    # path_num_verts += 1
+    # path_indices.append(path_num_verts)
+    # path_vert_colours.extend([0, 255, 0])
+
+    # First line
+    #path_verts.extend(geographic_location_to_cartesian_point(Location(0, 0)))
+    path_verts.extend([1, 1, 1])
+    path_num_verts += 1
+    path_indices.append(path_num_verts)
+    path_vert_colours.extend([0, 255, 0])
+
+    #path_verts.extend(geographic_location_to_cartesian_point(Location(90, 45)))
+    path_verts.extend([-1, 1, 1])
+    path_num_verts += 1
+    path_indices.append(path_num_verts)
+    path_vert_colours.extend([0, 255, 0])
+
+    # Second line
+    #path_verts.extend(geographic_location_to_cartesian_point(Location(25, -25)))
+    path_verts.extend([-0.1, -2, 2])
+    path_num_verts += 1
+    path_indices.append(path_num_verts)
+    path_vert_colours.extend([0, 255, 255])
+
+    #path_verts.extend(geographic_location_to_cartesian_point(Location(-10, -45)))
+    path_verts.extend([-0.4, -0.4, 0.4])
+    path_num_verts += 1
+    path_indices.append(path_num_verts)
+    path_vert_colours.extend([0, 255, 255])
+
+
+    print(path_verts)
+    return path_num_verts
+
+
+def construct_dummy_linestrip_paths(path_verts, path_num_verts, path_indices, path_vert_colours):
+    # Add a point at the origin to fix strange issue where an origin vertex seems to exist by default
+    path_verts.extend([1, -1, 1])
+    path_num_verts += 1
+    path_indices.append(path_num_verts)
+    path_indices.append(path_num_verts)
+    path_vert_colours.extend([0, 255, 0])
+
+    # First line
+    #path_verts.extend(geographic_location_to_cartesian_point(Location(0, 0)))
+    path_verts.extend([1, 1, 1])
+    path_num_verts += 1
+    path_indices.append(path_num_verts)
+    path_vert_colours.extend([0, 255, 0])
+
+    #path_verts.extend(geographic_location_to_cartesian_point(Location(90, 45)))
+    path_verts.extend([-1, 1, 1])
+    path_num_verts += 1
+    path_indices.append(path_num_verts)
+    path_indices.append(path_num_verts)
+    path_vert_colours.extend([0, 255, 0])
+
+    # Second line
+    # #path_verts.extend(geographic_location_to_cartesian_point(Location(25, -25)))
+    # path_verts.extend([-0.1, -2, 2])
+    # path_num_verts += 1
+    # path_indices.append(path_num_verts)
+    # #path_verts.extend(geographic_location_to_cartesian_point(Location(-10, -45)))
+    # path_verts.extend([-0.4, -0.4, 0.4])
+    # path_num_verts += 1
+    # path_indices.append(path_num_verts)
+
+    print(path_verts)
+    return path_num_verts
+
+
+def construct_cell_boundary_paths(path_verts, path_num_verts, path_indices, path_vert_colours):
+    nm = world.node_manager
+    num_boundary_verts = 0
+    print(path_indices)
+    print("start path")
+    for j, cell_id in enumerate(world.node_manager.cells):
+        # Double-add first index of path to create degenerate point for LINESTRIP
+        first_vert_index = path_num_verts+1
+        print("New cell")
+        for i, bp_id in enumerate(nm.get_boundary_nodes_of(cell_id)):
+            path_verts.extend(nm.cartesian_locs[bp_id])
+            path_num_verts += 1
+            num_boundary_verts += 1
+            # Add additional index to end line segment
+            if i != 0:
+                path_indices.append(path_num_verts-1)
+                path_indices.append(path_num_verts)
+            # Add a final segment between last and first verts
+            #path_indices.append(first_vert_index)
+            print(path_indices)
+            print(path_verts[-4:-1])
+            if i == 3:
+                break
+        if j == 0:
+            break
+    path_vert_colours.extend([255,0,0] * num_boundary_verts)
+    return path_num_verts
+
 
 def construct_blue_colour_list(num_verts):
     return cell_colouring.ocean_colour * num_verts
