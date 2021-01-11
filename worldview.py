@@ -41,6 +41,8 @@ class Window(pyglet.window.Window):
     indexed_vertex_list = None
     flat_indexed_vertex_list = None
     paths_indexed_vertex_list = None
+    batch_paths = None
+
     colouring_mode = 0
     numbered_options = None
     mode_is_3d = True
@@ -63,6 +65,8 @@ class Window(pyglet.window.Window):
         self.construct_2d_world()
 
     def construct_3d_world(self):
+        batch_paths = pyglet.graphics.Batch()
+
         """For 3D rendering of everett world, create pyglet indexed domain of vertices and colours."""
         verts, num_verts = everett_importer.construct_node_verts_with_boundary_duplicates()
 
@@ -81,12 +85,13 @@ class Window(pyglet.window.Window):
         self.indexed_vertex_list.colors = vert_colours
 
         # Paths, for rivers etc
-        path_verts, path_num_verts, path_indices, path_vert_colours = everett_importer.construct_3d_paths()
-        path_indexed_domain = pyglet.graphics.vertexdomain.create_indexed_domain('v3f/static', 'c3B/dynamic')
-        self.paths_indexed_vertex_list = path_indexed_domain.create(path_num_verts, len(path_indices))
-        self.paths_indexed_vertex_list.vertices = path_verts
-        self.paths_indexed_vertex_list.indices = path_indices
-        self.paths_indexed_vertex_list.colors = path_vert_colours
+        ###path_verts, path_num_verts, path_indices, path_vert_colours = everett_importer.construct_3d_paths(batch_paths)
+        everett_importer.construct_3d_paths(batch_paths)
+        # path_indexed_domain = pyglet.graphics.vertexdomain.create_indexed_domain('v3f/static', 'c3B/dynamic')
+        # self.paths_indexed_vertex_list = path_indexed_domain.create(path_num_verts, len(path_indices))
+        # self.paths_indexed_vertex_list.vertices = path_verts
+        # self.paths_indexed_vertex_list.indices = path_indices
+        # self.paths_indexed_vertex_list.colors = path_vert_colours
 
     def construct_2d_world(self):
         # Generate verts
@@ -135,7 +140,8 @@ class Window(pyglet.window.Window):
         # Draw coloured triangles to form cells
         if self.mode_is_3d:
             #self.indexed_vertex_list.draw(pyglet.gl.GL_TRIANGLES)
-            self.paths_indexed_vertex_list.draw(pyglet.gl.GL_LINES)
+            #self.paths_indexed_vertex_list.draw(pyglet.gl.GL_LINE_STRIP)
+            self.batch_paths.draw()
         else:
             self.flat_indexed_vertex_list.draw(pyglet.gl.GL_TRIANGLES)
         # Draw polar line

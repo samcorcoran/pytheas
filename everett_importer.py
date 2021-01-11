@@ -193,21 +193,23 @@ def construct_cell_indices():
             cell_triangle_idxs.append(boundary_node_indices[j])
     return cell_triangle_idxs
 
-def construct_3d_paths():
+def construct_3d_paths(batch_paths):
     path_verts = list()
     path_num_verts = 0
     path_indices = list()
     path_vert_colours = list()
 
     # Test origin start
-    path_verts.extend([0, 0, 0])
-    path_num_verts += 1
-    path_indices.append(path_num_verts)
-    path_vert_colours.extend([0, 255, 0])
+    # path_verts.extend([0, 0, 0])
+    # path_num_verts += 1
+    # path_vert_colours.extend([0, 255, 0])
+    # path_indices.append(path_num_verts)
+    # path_indices.append(path_num_verts)
 
     #path_num_verts = construct_river_paths(path_verts, path_num_verts, path_indices, path_vert_colours)
-    path_num_verts = construct_cell_boundary_paths(path_verts, path_num_verts, path_indices, path_vert_colours)
+    #construct_cell_boundary_paths(batch_paths)#path_verts, path_num_verts, path_indices, path_vert_colours)
     #path_num_verts = construct_dummy_paths(path_verts, path_num_verts, path_indices, path_vert_colours)
+    construct_dummy_paths(batch_paths)#path_verts, path_num_verts, path_indices, path_vert_colours)
     #path_num_verts = construct_dummy_linestrip_paths(path_verts, path_num_verts, path_indices, path_vert_colours)
 
     print("Final indices and verts")
@@ -232,7 +234,7 @@ def construct_river_paths(path_verts, path_num_verts, path_indices, path_vert_co
     path_vert_colours.extend(cell_colouring.river_colour * num_river_verts)
     return path_num_verts
 
-def construct_dummy_paths(path_verts, path_num_verts, path_indices, path_vert_colours):
+def construct_dummy_paths(batch_paths):#path_verts, path_num_verts, path_indices, path_vert_colours):
     # Add a point at the origin to fix strange issue where an origin vertex seems to exist by default
     # path_verts.extend([0, 0, 0])
     # path_num_verts += 1
@@ -241,33 +243,46 @@ def construct_dummy_paths(path_verts, path_num_verts, path_indices, path_vert_co
 
     # First line
     #path_verts.extend(geographic_location_to_cartesian_point(Location(0, 0)))
+    # path_num_verts += 1
+    # path_indices.append(path_num_verts)
+    # path_indices.append(path_num_verts)
+    # path_indices.append(path_num_verts)
+    # path_vert_colours.extend([0, 255, 0])
+    #
+    # #path_verts.extend(geographic_location_to_cartesian_point(Location(90, 45)))
+    # path_verts.extend([-1, 1, 1])
+    # path_num_verts += 1
+    # path_indices.append(path_num_verts)
+    # path_vert_colours.extend([0, 255, 0])
+    #
+    # # Second line
+    # #path_verts.extend(geographic_location_to_cartesian_point(Location(25, -25)))
+    # path_verts.extend([-0.1, -2, 2])
+    # path_num_verts += 1
+    # path_indices.append(path_num_verts)
+    # path_vert_colours.extend([0, 255, 255])
+    #
+    # #path_verts.extend(geographic_location_to_cartesian_point(Location(-10, -45)))
+    # path_verts.extend([-0.4, -0.4, 0.4])
+    # path_num_verts += 1
+    # path_indices.append(path_num_verts)
+    # path_indices.append(path_num_verts)
+    # path_vert_colours.extend([0, 255, 255])
+
+    path_verts = list()
+    path_vert_colours = list()
+
     path_verts.extend([1, 1, 1])
-    path_num_verts += 1
-    path_indices.append(path_num_verts)
     path_vert_colours.extend([0, 255, 0])
 
-    #path_verts.extend(geographic_location_to_cartesian_point(Location(90, 45)))
     path_verts.extend([-1, 1, 1])
-    path_num_verts += 1
-    path_indices.append(path_num_verts)
     path_vert_colours.extend([0, 255, 0])
 
-    # Second line
-    #path_verts.extend(geographic_location_to_cartesian_point(Location(25, -25)))
-    path_verts.extend([-0.1, -2, 2])
-    path_num_verts += 1
-    path_indices.append(path_num_verts)
-    path_vert_colours.extend([0, 255, 255])
 
-    #path_verts.extend(geographic_location_to_cartesian_point(Location(-10, -45)))
-    path_verts.extend([-0.4, -0.4, 0.4])
-    path_num_verts += 1
-    path_indices.append(path_num_verts)
-    path_vert_colours.extend([0, 255, 255])
+    batch_paths.add(2, pyglet.gl.GL_LINES, None, ('v3f', path_verts), ('c3B', path_vert_colours))
 
-
-    print(path_verts)
-    return path_num_verts
+    # print(path_verts)
+    # return path_num_verts
 
 
 def construct_dummy_linestrip_paths(path_verts, path_num_verts, path_indices, path_vert_colours):
@@ -306,33 +321,41 @@ def construct_dummy_linestrip_paths(path_verts, path_num_verts, path_indices, pa
     return path_num_verts
 
 
-def construct_cell_boundary_paths(path_verts, path_num_verts, path_indices, path_vert_colours):
+def construct_cell_boundary_paths(batch_paths):#path_verts, path_num_verts, path_indices, path_vert_colours):
     nm = world.node_manager
     num_boundary_verts = 0
-    print(path_indices)
-    print("start path")
+    #print(path_indices)
     for j, cell_id in enumerate(world.node_manager.cells):
         # Double-add first index of path to create degenerate point for LINESTRIP
-        first_vert_index = path_num_verts+1
-        print("New cell")
-        for i, bp_id in enumerate(nm.get_boundary_nodes_of(cell_id)):
+        # first_vert_index = path_num_verts+1
+        # print("New cell")
+        # path_indices.append(first_vert_index)
+        # for i, bp_id in enumerate(nm.get_boundary_nodes_of(cell_id)):
+        #     path_verts.extend(nm.cartesian_locs[bp_id])
+        #     path_num_verts += 1
+        #     num_boundary_verts += 1
+        #     # Add additional index to end line segment
+        #     # if i != 0:
+        #     #     path_indices.append(path_num_verts-1)
+        #     #     path_indices.append(path_num_verts)
+        #     # Add a final segment between last and first verts
+        #     #path_indices.append(first_vert_index)
+        #     path_indices.append(path_num_verts)
+        #     print(path_indices)
+        #     print(path_verts[-4:-1])
+        # path_indices.append(path_num_verts)
+        # # TODO: How many cells will be drawn?
+        # if j > 0 :
+        #     break
+        path_verts = list()
+        num_bps = 0
+        for bp_id in nm.get_boundary_nodes_of(cell_id):
             path_verts.extend(nm.cartesian_locs[bp_id])
-            path_num_verts += 1
-            num_boundary_verts += 1
-            # Add additional index to end line segment
-            if i != 0:
-                path_indices.append(path_num_verts-1)
-                path_indices.append(path_num_verts)
-            # Add a final segment between last and first verts
-            #path_indices.append(first_vert_index)
-            print(path_indices)
-            print(path_verts[-4:-1])
-            if i == 3:
-                break
-        if j == 0:
-            break
-    path_vert_colours.extend([255,0,0] * num_boundary_verts)
-    return path_num_verts
+            num_bps += 1
+        print("Cell {} - num_bps: {}, len(path_verts): {}".format(j, num_bps, len(path_verts)))
+        batch_paths.add(num_bps, pyglet.gl.GL_LINE_STRIP, None, ('v3f', path_verts), ('c3B', cell_colouring.river_colour*num_bps))
+    # path_vert_colours.extend([255,0,0] * num_boundary_verts)
+    # return path_num_verts
 
 
 def construct_blue_colour_list(num_verts):
