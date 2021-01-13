@@ -207,7 +207,7 @@ def construct_3d_paths(batch_paths):
     # path_indices.append(path_num_verts)
 
     #path_num_verts = construct_river_paths(path_verts, path_num_verts, path_indices, path_vert_colours)
-    #construct_cell_boundary_paths(batch_paths)#path_verts, path_num_verts, path_indices, path_vert_colours)
+    construct_cell_boundary_paths(batch_paths)#path_verts, path_num_verts, path_indices, path_vert_colours)
     #path_num_verts = construct_dummy_paths(path_verts, path_num_verts, path_indices, path_vert_colours)
     construct_dummy_paths(batch_paths)#path_verts, path_num_verts, path_indices, path_vert_colours)
     #path_num_verts = construct_dummy_linestrip_paths(path_verts, path_num_verts, path_indices, path_vert_colours)
@@ -280,6 +280,8 @@ def construct_dummy_paths(batch_paths):#path_verts, path_num_verts, path_indices
 
 
     batch_paths.add(2, pyglet.gl.GL_LINES, None, ('v3f', path_verts), ('c3B', path_vert_colours))
+    #batch_paths.add(2, pyglet.gl.GL_LINES, None, ('v3f', path_verts), ('c3B', [0, 0, 255]*num_verts))
+
 
     # print(path_verts)
     # return path_num_verts
@@ -325,6 +327,8 @@ def construct_cell_boundary_paths(batch_paths):#path_verts, path_num_verts, path
     nm = world.node_manager
     num_boundary_verts = 0
     #print(path_indices)
+    all_path_verts = list()
+    all_path_colours = list()
     for j, cell_id in enumerate(world.node_manager.cells):
         # Double-add first index of path to create degenerate point for LINESTRIP
         # first_vert_index = path_num_verts+1
@@ -349,11 +353,29 @@ def construct_cell_boundary_paths(batch_paths):#path_verts, path_num_verts, path
         #     break
         path_verts = list()
         num_bps = 0
-        for bp_id in nm.get_boundary_nodes_of(cell_id):
+        for i, bp_id in enumerate(nm.get_boundary_nodes_of(cell_id)):
             path_verts.extend(nm.cartesian_locs[bp_id])
+            # Double add for end of first line and start of next
+            if i != 0:
+                path_verts.extend(nm.cartesian_locs[bp_id])
             num_bps += 1
         print("Cell {} - num_bps: {}, len(path_verts): {}".format(j, num_bps, len(path_verts)))
-        batch_paths.add(num_bps, pyglet.gl.GL_LINE_STRIP, None, ('v3f', path_verts), ('c3B', cell_colouring.river_colour*num_bps))
+        first_vert = path_verts[0:3]
+        path_verts.extend(first_vert)
+        all_path_verts.extend(path_verts)
+
+        num_verts = len(path_verts)//3
+        path_colours = cell_colouring.river_colour*num_verts
+        print("len(all_path_verts): {}, Num_verts: {}, num_bps: {}, len(path_colours): {}".format(len(all_path_verts), num_verts, num_bps, len(path_colours)))
+
+        all_path_colours.extend(path_colours)
+
+        #batch_paths.add(len(path_verts)//3, pyglet.gl.GL_LINES, None, ('v3f', path_verts), ('c3B', path_colours))
+    print("Check it")
+    #all_path_colours = cell_colouring.river_colour*(len(all_path_verts)//3)
+    print(len(all_path_verts))
+    print(len(all_path_colours))
+    batch_paths.add(len(all_path_verts)//3, pyglet.gl.GL_LINES, None, ('v3f', all_path_verts), ('c3B', all_path_colours))
     # path_vert_colours.extend([255,0,0] * num_boundary_verts)
     # return path_num_verts
 

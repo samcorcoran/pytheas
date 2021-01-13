@@ -65,7 +65,7 @@ class Window(pyglet.window.Window):
         self.construct_2d_world()
 
     def construct_3d_world(self):
-        batch_paths = pyglet.graphics.Batch()
+        self.batch_paths = pyglet.graphics.Batch()
 
         """For 3D rendering of everett world, create pyglet indexed domain of vertices and colours."""
         verts, num_verts = everett_importer.construct_node_verts_with_boundary_duplicates()
@@ -86,7 +86,7 @@ class Window(pyglet.window.Window):
 
         # Paths, for rivers etc
         ###path_verts, path_num_verts, path_indices, path_vert_colours = everett_importer.construct_3d_paths(batch_paths)
-        everett_importer.construct_3d_paths(batch_paths)
+        everett_importer.construct_3d_paths(self.batch_paths)
         # path_indexed_domain = pyglet.graphics.vertexdomain.create_indexed_domain('v3f/static', 'c3B/dynamic')
         # self.paths_indexed_vertex_list = path_indexed_domain.create(path_num_verts, len(path_indices))
         # self.paths_indexed_vertex_list.vertices = path_verts
@@ -172,7 +172,7 @@ class Window(pyglet.window.Window):
 
     def on_text_motion(self, motion):
         global keys
-        # TODO: Remove this true, so rotation only works on 3d mode
+        # TODO: Remove this true, so rotation only works on 3d mode?
         if True or self.mode_is_3d:
             if keys[key.UP]:
                 self.xRotation -= rotation_increment

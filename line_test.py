@@ -18,6 +18,7 @@ v_list = None
 
 @w.event
 def on_draw():
+
     glColor3f(1, 1, 1)
     glPolygonMode(GL_FRONT, GL_LINE)
     glBegin(GL_LINES)
@@ -49,18 +50,15 @@ def build_batches():
 def update_batches():
     global v_list
     num_verts = len(coords)//3
-    #v_list.resize(num_verts)
     print(num_verts)
     print("That was len")
-    v_list.verts = coords
-    #v_list.colors[-4:-1] = [150, 100, 100]
-    x = v_list.vertices[0]
-    v_list.vertices[0] = x + 10
-    print(v_list)
+    v_list.delete()
+    v_list = batch.add(num_verts, pyglet.gl.GL_LINES, None, ('v3f', coords), ('c3B', [0, 0, 255]*num_verts))
+    v_list.vertices = coords
 
 @w.event
 def on_mouse_press(x, y, button, modifiers):
-    #coords.extend([x, y, 0])
+    coords.extend([x, y, 0])
     print("{} coords".format(len(coords)//3))
     for i in range(0, len(coords), 3):
         x1 = coords[i:i+3]
