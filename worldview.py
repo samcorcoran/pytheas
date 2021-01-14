@@ -139,7 +139,7 @@ class Window(pyglet.window.Window):
 
         # Draw coloured triangles to form cells
         if self.mode_is_3d:
-            #self.indexed_vertex_list.draw(pyglet.gl.GL_TRIANGLES)
+            self.indexed_vertex_list.draw(pyglet.gl.GL_TRIANGLES)
             #self.paths_indexed_vertex_list.draw(pyglet.gl.GL_LINE_STRIP)
             self.batch_paths.draw()
         else:

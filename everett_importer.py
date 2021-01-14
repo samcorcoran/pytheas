@@ -23,7 +23,7 @@ centre_node_id_to_boundary_vert_idx_list = dict()
 @print_timer
 def generate_world():
     global world
-    world = world_three.generate_world(seed=954, total_cells_desired=100)
+    world = world_three.generate_world(seed=954, total_cells_desired=10000)
 
 @print_timer
 def land_verts():
@@ -206,8 +206,8 @@ def construct_3d_paths(batch_paths):
     # path_indices.append(path_num_verts)
     # path_indices.append(path_num_verts)
 
-    #path_num_verts = construct_river_paths(path_verts, path_num_verts, path_indices, path_vert_colours)
-    construct_cell_boundary_paths(batch_paths)#path_verts, path_num_verts, path_indices, path_vert_colours)
+    construct_river_paths(batch_paths)#(path_verts, path_num_verts, path_indices, path_vert_colours)
+    #construct_cell_boundary_paths(batch_paths)#path_verts, path_num_verts, path_indices, path_vert_colours)
     #path_num_verts = construct_dummy_paths(path_verts, path_num_verts, path_indices, path_vert_colours)
     construct_dummy_paths(batch_paths)#path_verts, path_num_verts, path_indices, path_vert_colours)
     #path_num_verts = construct_dummy_linestrip_paths(path_verts, path_num_verts, path_indices, path_vert_colours)
@@ -218,21 +218,30 @@ def construct_3d_paths(batch_paths):
 
     return path_verts, path_num_verts, path_indices, path_vert_colours
 
-def construct_river_paths(path_verts, path_num_verts, path_indices, path_vert_colours):
+def construct_river_paths(batch_paths):
     # Iterate over rivers, adding vert pairs for each segment
     nm = world.node_manager
     num_river_verts = 0
-    for river in nm.rivers:
+    path_verts = list()
+    path_vert_colours = list()
+    for j, river in enumerate(nm.rivers):
+        river_verts = list()
         for i, river_loc in enumerate(river.sequence_of_locs):
-            path_verts.extend(geographic_location_to_cartesian_point(river_loc))
-            path_num_verts += 1
-            num_river_verts += 1
-            path_indices.append(path_num_verts)
+            print(river_loc)
+            river_verts.extend(geographic_location_to_cartesian_point(river_loc))
             # Double-add mid-river verts to serve as end and start of successive river segments
             if i != 0 and i != len(river.sequence_of_locs)-1:
-                path_indices.append(path_num_verts)
-    path_vert_colours.extend(cell_colouring.river_colour * num_river_verts)
-    return path_num_verts
+                river_verts.extend(geographic_location_to_cartesian_point(river_loc))
+        # Should now have pairs of verts in river_verts
+        if len(river_verts)%2 != 0:
+            print("WARNING: River with non-even number of vertices is going to mess up the line rendering. Ignored.")
+            continue
+        path_vert_colours.extend(cell_colouring.river_colour * (len(river_verts)//3))
+        path_verts.extend(river_verts)
+    num_path_verts = len(path_verts)//3
+    num_path_colours = len(path_vert_colours)//3
+    print("num_path_verts: {}, num_path_colours: {}".format(num_path_verts, num_path_colours))
+    batch_paths.add(num_path_verts, pyglet.gl.GL_LINES, None, ('v3f', path_verts), ('c3B', path_vert_colours))
 
 def construct_dummy_paths(batch_paths):#path_verts, path_num_verts, path_indices, path_vert_colours):
     # Add a point at the origin to fix strange issue where an origin vertex seems to exist by default
@@ -325,32 +334,9 @@ def construct_dummy_linestrip_paths(path_verts, path_num_verts, path_indices, pa
 
 def construct_cell_boundary_paths(batch_paths):#path_verts, path_num_verts, path_indices, path_vert_colours):
     nm = world.node_manager
-    num_boundary_verts = 0
-    #print(path_indices)
     all_path_verts = list()
     all_path_colours = list()
     for j, cell_id in enumerate(world.node_manager.cells):
-        # Double-add first index of path to create degenerate point for LINESTRIP
-        # first_vert_index = path_num_verts+1
-        # print("New cell")
-        # path_indices.append(first_vert_index)
-        # for i, bp_id in enumerate(nm.get_boundary_nodes_of(cell_id)):
-        #     path_verts.extend(nm.cartesian_locs[bp_id])
-        #     path_num_verts += 1
-        #     num_boundary_verts += 1
-        #     # Add additional index to end line segment
-        #     # if i != 0:
-        #     #     path_indices.append(path_num_verts-1)
-        #     #     path_indices.append(path_num_verts)
-        #     # Add a final segment between last and first verts
-        #     #path_indices.append(first_vert_index)
-        #     path_indices.append(path_num_verts)
-        #     print(path_indices)
-        #     print(path_verts[-4:-1])
-        # path_indices.append(path_num_verts)
-        # # TODO: How many cells will be drawn?
-        # if j > 0 :
-        #     break
         path_verts = list()
         num_bps = 0
         for i, bp_id in enumerate(nm.get_boundary_nodes_of(cell_id)):
@@ -369,15 +355,7 @@ def construct_cell_boundary_paths(batch_paths):#path_verts, path_num_verts, path
         print("len(all_path_verts): {}, Num_verts: {}, num_bps: {}, len(path_colours): {}".format(len(all_path_verts), num_verts, num_bps, len(path_colours)))
 
         all_path_colours.extend(path_colours)
-
-        #batch_paths.add(len(path_verts)//3, pyglet.gl.GL_LINES, None, ('v3f', path_verts), ('c3B', path_colours))
-    print("Check it")
-    #all_path_colours = cell_colouring.river_colour*(len(all_path_verts)//3)
-    print(len(all_path_verts))
-    print(len(all_path_colours))
     batch_paths.add(len(all_path_verts)//3, pyglet.gl.GL_LINES, None, ('v3f', all_path_verts), ('c3B', all_path_colours))
-    # path_vert_colours.extend([255,0,0] * num_boundary_verts)
-    # return path_num_verts
 
 
 def construct_blue_colour_list(num_verts):
