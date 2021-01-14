@@ -206,15 +206,9 @@ def construct_3d_paths(batch_paths):
     # path_indices.append(path_num_verts)
     # path_indices.append(path_num_verts)
 
-    construct_river_paths(batch_paths)#(path_verts, path_num_verts, path_indices, path_vert_colours)
-    #construct_cell_boundary_paths(batch_paths)#path_verts, path_num_verts, path_indices, path_vert_colours)
-    #path_num_verts = construct_dummy_paths(path_verts, path_num_verts, path_indices, path_vert_colours)
-    construct_dummy_paths(batch_paths)#path_verts, path_num_verts, path_indices, path_vert_colours)
-    #path_num_verts = construct_dummy_linestrip_paths(path_verts, path_num_verts, path_indices, path_vert_colours)
-
-    print("Final indices and verts")
-    print(path_indices)
-    print(path_verts)
+    construct_river_paths(batch_paths)
+    construct_cell_boundary_paths(batch_paths)
+    construct_dummy_paths(batch_paths)
 
     return path_verts, path_num_verts, path_indices, path_vert_colours
 
@@ -243,57 +237,14 @@ def construct_river_paths(batch_paths):
     print("num_path_verts: {}, num_path_colours: {}".format(num_path_verts, num_path_colours))
     batch_paths.add(num_path_verts, pyglet.gl.GL_LINES, None, ('v3f', path_verts), ('c3B', path_vert_colours))
 
-def construct_dummy_paths(batch_paths):#path_verts, path_num_verts, path_indices, path_vert_colours):
-    # Add a point at the origin to fix strange issue where an origin vertex seems to exist by default
-    # path_verts.extend([0, 0, 0])
-    # path_num_verts += 1
-    # path_indices.append(path_num_verts)
-    # path_vert_colours.extend([0, 255, 0])
-
-    # First line
-    #path_verts.extend(geographic_location_to_cartesian_point(Location(0, 0)))
-    # path_num_verts += 1
-    # path_indices.append(path_num_verts)
-    # path_indices.append(path_num_verts)
-    # path_indices.append(path_num_verts)
-    # path_vert_colours.extend([0, 255, 0])
-    #
-    # #path_verts.extend(geographic_location_to_cartesian_point(Location(90, 45)))
-    # path_verts.extend([-1, 1, 1])
-    # path_num_verts += 1
-    # path_indices.append(path_num_verts)
-    # path_vert_colours.extend([0, 255, 0])
-    #
-    # # Second line
-    # #path_verts.extend(geographic_location_to_cartesian_point(Location(25, -25)))
-    # path_verts.extend([-0.1, -2, 2])
-    # path_num_verts += 1
-    # path_indices.append(path_num_verts)
-    # path_vert_colours.extend([0, 255, 255])
-    #
-    # #path_verts.extend(geographic_location_to_cartesian_point(Location(-10, -45)))
-    # path_verts.extend([-0.4, -0.4, 0.4])
-    # path_num_verts += 1
-    # path_indices.append(path_num_verts)
-    # path_indices.append(path_num_verts)
-    # path_vert_colours.extend([0, 255, 255])
-
+def construct_dummy_paths(batch_paths):
     path_verts = list()
     path_vert_colours = list()
-
     path_verts.extend([1, 1, 1])
     path_vert_colours.extend([0, 255, 0])
-
     path_verts.extend([-1, 1, 1])
     path_vert_colours.extend([0, 255, 0])
-
-
     batch_paths.add(2, pyglet.gl.GL_LINES, None, ('v3f', path_verts), ('c3B', path_vert_colours))
-    #batch_paths.add(2, pyglet.gl.GL_LINES, None, ('v3f', path_verts), ('c3B', [0, 0, 255]*num_verts))
-
-
-    # print(path_verts)
-    # return path_num_verts
 
 
 def construct_dummy_linestrip_paths(path_verts, path_num_verts, path_indices, path_vert_colours):
