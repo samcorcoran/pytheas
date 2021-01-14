@@ -1,9 +1,11 @@
+import math
+
 from pyglet.gl import *
 from everett.worldgraph import world
 from everett.worldgenerators import world_three
 from everett.spherepoints.cartesian_utils import geographic_location_to_cartesian_point
 from everett.spherepoints.geographic_utils import Location
-
+from everett.spherepoints.vector_utils import normalized, magnitude
 
 import cell_colouring
 from print_timer import print_timer
@@ -23,7 +25,7 @@ centre_node_id_to_boundary_vert_idx_list = dict()
 @print_timer
 def generate_world():
     global world
-    world = world_three.generate_world(seed=954, total_cells_desired=10000)
+    world = world_three.generate_world(seed=954, total_cells_desired=100)
 
 @print_timer
 def land_verts():
@@ -95,15 +97,16 @@ def construct_2d_node_verts_with_boundary_duplicates(longitude_offset_for_rotati
         # Add centre node to list
         centre_geographic_loc = nm.geographic_locs[node_id]
         # Apply rotational offset to longitude value
-        centre_lon = clamp_to_longitude_range(centre_geographic_loc[0] + longitude_offset_for_rotation)
-        centre_geographic_loc = [centre_lon, centre_geographic_loc[1]]
-        verts_2d.extend(geographic_to_2d_cartesian(centre_geographic_loc, False, None))
+        centre_lon = clamp_to_longitude_range(centre_geographic_loc.longitude + longitude_offset_for_rotation)
+        centre_geographic_loc = Location(centre_lon, centre_geographic_loc.latitude)
+        centre_point = geographic_to_2d_cartesian(centre_geographic_loc, False, None)
+        verts_2d.extend(centre_point)
         # Store index in vert
         node_ids_to_vert_idx[node_id] = num_verts_2d
         num_verts_2d += 1
 
         # Determine if east or west
-        centre_is_eastern = centre_geographic_loc[0] > 0
+        centre_is_eastern = centre_geographic_loc.longitude > 0
         # TODO: Is there a need for is_northern? Hexes that wrap over the pole should go higher than the top of the map
 
         # Now add its boundary points
@@ -111,7 +114,7 @@ def construct_2d_node_verts_with_boundary_duplicates(longitude_offset_for_rotati
         for bp_id in nm.get_boundary_nodes_of(node_id):
             bp_lon, bp_lat = nm.geographic_locs[bp_id]
             bp_lon += longitude_offset_for_rotation
-            verts_2d.extend(geographic_to_2d_cartesian([bp_lon, bp_lat], is_boundary_point=True, centre_is_eastern=centre_is_eastern))
+            verts_2d.extend(geographic_to_2d_cartesian(Location(bp_lon, bp_lat), is_boundary_point=True, centre_is_eastern=centre_is_eastern))
 
             # Remember the id's direct mapping to verts
             node_ids_to_vert_idx[node_id] = num_verts_2d
@@ -132,7 +135,7 @@ def clamp_to_longitude_range(lon):
 def geographic_to_2d_cartesian(geo_loc, is_boundary_point, centre_is_eastern):
     y = 0 # Fixed depth for placing the 2d map in space
     # East-West dimensions
-    x = geo_loc[0]
+    x = geo_loc.longitude
     # Only boundary points are fixed for wrapping issues (side of map is dictated by cell centre's position)
     if is_boundary_point:
         if centre_is_eastern:
@@ -156,7 +159,7 @@ def geographic_to_2d_cartesian(geo_loc, is_boundary_point, centre_is_eastern):
     # Scale x to a smaller range, and flip it to match globe
     x = x / 100 * -1
     # North-South dimensions
-    z = geo_loc[1]
+    z = geo_loc.latitude
     # Scale [-90,90] to a smaller range
     z = z / 100
     return [x, y, z]
@@ -221,8 +224,8 @@ def construct_river_paths(batch_paths):
     for j, river in enumerate(nm.rivers):
         river_verts = list()
         for i, river_loc in enumerate(river.sequence_of_locs):
-            print(river_loc)
-            river_verts.extend(geographic_location_to_cartesian_point(river_loc))
+            river_point = geographic_location_to_cartesian_point(river_loc)
+            river_verts.extend(river_point)
             # Double-add mid-river verts to serve as end and start of successive river segments
             if i != 0 and i != len(river.sequence_of_locs)-1:
                 river_verts.extend(geographic_location_to_cartesian_point(river_loc))
@@ -279,7 +282,6 @@ def construct_dummy_linestrip_paths(path_verts, path_num_verts, path_indices, pa
     # path_num_verts += 1
     # path_indices.append(path_num_verts)
 
-    print(path_verts)
     return path_num_verts
 
 
