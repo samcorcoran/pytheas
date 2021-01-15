@@ -85,13 +85,7 @@ class Window(pyglet.window.Window):
         self.indexed_vertex_list.colors = vert_colours
 
         # Paths, for rivers etc
-        ###path_verts, path_num_verts, path_indices, path_vert_colours = everett_importer.construct_3d_paths(batch_paths)
         everett_importer.construct_3d_paths(self.batch_paths)
-        # path_indexed_domain = pyglet.graphics.vertexdomain.create_indexed_domain('v3f/static', 'c3B/dynamic')
-        # self.paths_indexed_vertex_list = path_indexed_domain.create(path_num_verts, len(path_indices))
-        # self.paths_indexed_vertex_list.vertices = path_verts
-        # self.paths_indexed_vertex_list.indices = path_indices
-        # self.paths_indexed_vertex_list.colors = path_vert_colours
 
     def construct_2d_world(self):
         # Generate verts
