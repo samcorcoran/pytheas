@@ -4,8 +4,9 @@ import everett_importer
 from print_timer import print_timer
 
 ocean_colour = [20, 20, 80]
-river_colour = [255, 0, 0]#ocean_colour
+river_colour = [40, 80, 200]
 land_colour = [70, 160, 20]
+cell_outline_colour = [80, 65, 65]
 
 def debug_colour_generator(num_colours):
     # Generates debug colours (stronger red for each successively)
