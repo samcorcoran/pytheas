@@ -13,9 +13,6 @@ from print_timer import print_timer
 
 world = None
 
-def world_node_manager():
-    return world.node_manager
-
 planet_centre_coord = [0,0]
 planet_drawn_radius = 10
 
@@ -79,6 +76,7 @@ def construct_node_verts_with_boundary_duplicates():
             num_verts += 1
     return verts, num_verts
 
+
 @print_timer
 def construct_2d_node_verts_with_boundary_duplicates(longitude_offset_for_rotation):
     """
@@ -124,12 +122,14 @@ def construct_2d_node_verts_with_boundary_duplicates(longitude_offset_for_rotati
             num_verts_2d += 1
     return verts_2d, num_verts_2d
 
+
 def clamp_to_longitude_range(lon):
     if lon <= -180:
         lon = (lon % 360) + 360
     elif lon > 180:
         lon = (lon % 360) - 360
     return lon
+
 
 # TODO: Rename this to something less generic and more specific to cell centre and boundary locations
 def geographic_to_2d_cartesian(geo_loc, is_boundary_point, centre_is_eastern):
@@ -163,6 +163,7 @@ def geographic_to_2d_cartesian(geo_loc, is_boundary_point, centre_is_eastern):
     # Scale [-90,90] to a smaller range
     z = z / 100
     return [x, y, z]
+
 
 @print_timer
 def construct_node_verts(num_verts, verts):
