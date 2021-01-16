@@ -205,8 +205,8 @@ def construct_3d_paths(batch_paths):
     path_vert_colours = list()
 
     construct_river_paths(batch_paths)
-    construct_cell_boundary_paths(batch_paths)
-    construct_dummy_paths(batch_paths)
+    #construct_cell_boundary_paths(batch_paths)
+    #construct_dummy_paths(batch_paths)
 
     return path_verts, path_num_verts, path_indices, path_vert_colours
 
