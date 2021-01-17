@@ -52,6 +52,7 @@ class Window(pyglet.window.Window):
         super(Window, self).__init__(width, height, title)
         glClearColor(0, 0, 0, 1)
         glEnable(GL_DEPTH_TEST)
+        pyglet.gl.glLineWidth(2)
         self.set_up_options_ui()
 
         self.construct_world_for_drawing()
