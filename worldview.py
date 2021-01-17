@@ -4,6 +4,7 @@ from pyglet.window import key
 from pyglet.window.key import KeyStateHandler
 from everett_importer import construct_blue_colour_list
 
+import pytheas_config as config
 import everett_importer
 import cell_colouring
 
@@ -52,7 +53,7 @@ class Window(pyglet.window.Window):
         super(Window, self).__init__(width, height, title)
         glClearColor(0, 0, 0, 1)
         glEnable(GL_DEPTH_TEST)
-        pyglet.gl.glLineWidth(2)
+        pyglet.gl.glLineWidth(config.path_line_width)
         self.set_up_options_ui()
 
         self.construct_world_for_drawing()
@@ -117,7 +118,7 @@ class Window(pyglet.window.Window):
         # Push Matrix onto stack
         glPushMatrix()
         if self.mode_is_3d:
-            # TODO: Remove this magic number by positioning the camera differently? Also, fix that warping...
+            # TODO: Remove this magic number by positioning the camera differently? Also, fix that perspective warping...
             z_rotation_to_make_3d_and_2d_match = 90
             glRotatef(self.xRotation, 1, 0, 0)
             glRotatef(self.yRotation, 0, 1, 0)
@@ -167,16 +168,16 @@ class Window(pyglet.window.Window):
 
     def on_text_motion(self, motion):
         global keys
-        # TODO: Remove this true, so rotation only works on 3d mode?
-        if True or self.mode_is_3d:
+        if self.mode_is_3d:
             if keys[key.UP]:
                 self.xRotation -= rotation_increment
             if keys[key.DOWN]:
                 self.xRotation += rotation_increment
-            if keys[key.LEFT]:
-                self.zRotation += rotation_increment
-            if keys[key.RIGHT]:
-                self.zRotation -= rotation_increment
+        # Left and right are permitted in 2D
+        if keys[key.LEFT]:
+            self.zRotation += rotation_increment
+        if keys[key.RIGHT]:
+            self.zRotation -= rotation_increment
         self.clamp_rotations()
         self.dirty_verts = True
 

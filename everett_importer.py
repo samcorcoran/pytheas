@@ -6,6 +6,7 @@ from everett.worldgenerators import world_three
 from everett.spherepoints.cartesian_utils import geographic_location_to_cartesian_point
 from everett.spherepoints.geographic_utils import Location
 from everett.spherepoints.vector_utils import normalized, magnitude
+import pytheas_config as config
 
 import cell_colouring
 from print_timer import print_timer
@@ -22,7 +23,7 @@ centre_node_id_to_boundary_vert_idx_list = dict()
 @print_timer
 def generate_world():
     global world
-    world = world_three.generate_world(seed=954, total_cells_desired=100)
+    world = world_three.generate_world(seed=954, total_cells_desired=config.number_of_cells)
 
 @print_timer
 def land_verts():
@@ -205,9 +206,12 @@ def construct_3d_paths(batch_paths):
     path_indices = list()
     path_vert_colours = list()
 
-    construct_river_paths(batch_paths)
-    #construct_cell_boundary_paths(batch_paths)
-    #construct_dummy_paths(batch_paths)
+    if config.render_river_paths:
+        construct_river_paths(batch_paths)
+    if config.render_cell_boundaries:
+        construct_cell_boundary_paths(batch_paths)
+    if construct_dummy_paths(batch_paths):
+        config.render_dummy_paths
 
     return path_verts, path_num_verts, path_indices, path_vert_colours
 
